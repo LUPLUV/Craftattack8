@@ -1,0 +1,27 @@
+name: Craftattack8
+version: 1.0
+api-version: 1.19
+author: LUPLUV
+main: dev.lupluv.ca8.Ca8
+
+commands:
+  setup:
+    permission: craftattack.command.setup
+  craftattack:
+    permission: craftattack.command.craftattack
+    aliases:
+      - ca
+  register:
+    permission: craftattack.command.register
+  login:
+    permission: craftattack.command.login
+  status:
+    permission: craftattack.command.status
+  rules:
+    permission: craftattack.command.rules
+  pwreset:
+    permission: craftattack.command.pwreset
+  options:
+    permission: craftattack.command.options
+  stats:
+    permission: craftattack.command.stats
