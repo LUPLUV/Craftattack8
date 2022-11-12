@@ -33,7 +33,11 @@
  
      public ServerHandshakePacketListenerImpl(MinecraftServer server, Connection connection) {
          this.server = server;
-@@ -24,18 +41,111 @@
+@@ -21,21 +38,114 @@
+ 
+     @Override
+     public void handleIntention(ClientIntentionPacket packet) {
++        this.connection.hostname = packet.hostName + ":" + packet.port; // CraftBukkit  - set hostname
          switch (packet.getIntention()) {
              case LOGIN:
                  this.connection.setProtocol(ConnectionProtocol.LOGIN);
@@ -147,7 +151,6 @@
 +                        return;
 +                    }
 +                    // Spigot End
-+                    ((ServerLoginPacketListenerImpl) this.connection.getPacketListener()).hostname = packet.hostName + ":" + packet.port; // CraftBukkit - set hostname
                  }
                  break;
              case STATUS:

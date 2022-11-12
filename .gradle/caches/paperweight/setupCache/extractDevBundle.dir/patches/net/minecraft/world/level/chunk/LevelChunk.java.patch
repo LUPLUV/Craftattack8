@@ -121,8 +121,8 @@
 +        // index = (relativeX + NEIGHBOUR_CACHE_RADIUS) + (relativeZ + NEIGHBOUR_CACHE_RADIUS) * (NEIGHBOUR_CACHE_RADIUS * 2 + 1)
 +        // optimised variant of the above by moving some of the ops to compile time
 +        return relativeX + (relativeZ * (NEIGHBOUR_CACHE_RADIUS * 2 + 1)) + (NEIGHBOUR_CACHE_RADIUS + NEIGHBOUR_CACHE_RADIUS * ((NEIGHBOUR_CACHE_RADIUS * 2 + 1)));
-     }
- 
++    }
++
 +    public final LevelChunk getRelativeNeighbourIfLoaded(final int relativeX, final int relativeZ) {
 +        return this.loadedNeighbourChunks[getNeighbourIndex(relativeX, relativeZ)];
 +    }
@@ -203,8 +203,8 @@
 +    }
 +    public final boolean areNeighboursLoaded(final int radius) {
 +        return LevelChunk.areNeighboursLoaded(this.neighbourChunksLoadedBitset, radius);
-+    }
-+
+     }
+ 
 +    public static boolean areNeighboursLoaded(final long bitset, final int radius) {
 +        // index = relativeX + (relativeZ * (NEIGHBOUR_CACHE_RADIUS * 2 + 1)) + (NEIGHBOUR_CACHE_RADIUS + NEIGHBOUR_CACHE_RADIUS * ((NEIGHBOUR_CACHE_RADIUS * 2 + 1)))
 +        switch (radius) {
@@ -790,7 +790,7 @@
 +                    + " (" + getBlockState(blockposition) + ") where there was no entity tile!\n" +
 +                    "Chunk coordinates: " + (this.chunkPos.x * 16) + "," + (this.chunkPos.z * 16) +
 +                    "\nWorld: " + level.getLevel().dimension().location());
-+            e.printStackTrace();
++            io.papermc.paper.util.TraceUtil.printStackTrace(e);
 +            ServerInternalException.reportInternalException(e);
 +            // Paper end
 +            // CraftBukkit end
@@ -897,7 +897,7 @@
          }
  
      }
-@@ -440,28 +823,189 @@
+@@ -440,28 +823,209 @@
  
      }
  
@@ -920,49 +920,7 @@
 +
 +    /* Note: We skip the light neighbour chunk loading done for the vanilla full chunk */
 +    /* Starlight does not need these chunks for lighting purposes because of edge checks */
-+
-+    public void onChunkLoad(io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder) {
-+        // figure out how this should interface with:
-+        // the entity chunk load event // -> moved to the FULL status
-+        // the chunk load event // -> stays here
-+        // any entity add to world events // -> in FULL status
-+        this.loadCallback();
-+        net.minecraft.server.ChunkSystem.onChunkBorder(this, chunkHolder.vanillaChunkHolder);
-+    }
-+
-+    public void onChunkUnload(io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder) {
-+        // figure out how this should interface with:
-+        // the entity chunk load event // -> moved to chunk unload to disk (not written yet)
-+        // the chunk load event // -> stays here
-+        // any entity add to world events // -> goes into the unload logic, it will completely explode
-+        // etc later
-+        this.unloadCallback();
-+        net.minecraft.server.ChunkSystem.onChunkNotBorder(this, chunkHolder.vanillaChunkHolder);
-+    }
-+
-+    public void onChunkTicking(io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder) {
-+        this.postProcessGeneration();
-+        this.level.startTickingChunk(this);
-+        net.minecraft.server.ChunkSystem.onChunkTicking(this, chunkHolder.vanillaChunkHolder);
-+    }
-+
-+    public void onChunkNotTicking(io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder) {
-+        net.minecraft.server.ChunkSystem.onChunkNotTicking(this, chunkHolder.vanillaChunkHolder);
-+    }
-+
-+    public void onChunkEntityTicking(io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder) {
-+        net.minecraft.server.ChunkSystem.onChunkEntityTicking(this, chunkHolder.vanillaChunkHolder);
-+    }
-+
-+    public void onChunkNotEntityTicking(io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder) {
-+        net.minecraft.server.ChunkSystem.onChunkNotEntityTicking(this, chunkHolder.vanillaChunkHolder);
-+    }
-+    // Paper end - new load callbacks
-+
-+    // CraftBukkit start
-+    public void loadCallback() {
-+        if (this.loadedTicketLevel) { LOGGER.error("Double calling chunk load!", new Throwable()); } // Paper
-+        // Paper start - neighbour cache
++    public void pushChunkIntoLoadedMap() {
 +        int chunkX = this.chunkPos.x;
 +        int chunkZ = this.chunkPos.z;
 +        ServerChunkCache chunkProvider = this.level.getChunkSource();
@@ -977,10 +935,55 @@
 +            }
 +        }
 +        this.setNeighbourLoaded(0, 0, this);
++        this.level.getChunkSource().addLoadedChunk(this);
++    }
++
++    public void onChunkLoad(io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder) {
++        // figure out how this should interface with:
++        // the entity chunk load event // -> moved to the FULL status
++        // the chunk load event // -> stays here
++        // any entity add to world events // -> in FULL status
++        this.loadCallback();
++        io.papermc.paper.chunk.system.ChunkSystem.onChunkBorder(this, chunkHolder.vanillaChunkHolder);
++    }
++
++    public void onChunkUnload(io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder) {
++        // figure out how this should interface with:
++        // the entity chunk load event // -> moved to chunk unload to disk (not written yet)
++        // the chunk load event // -> stays here
++        // any entity add to world events // -> goes into the unload logic, it will completely explode
++        // etc later
++        this.unloadCallback();
++        io.papermc.paper.chunk.system.ChunkSystem.onChunkNotBorder(this, chunkHolder.vanillaChunkHolder);
++    }
++
++    public void onChunkTicking(io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder) {
++        this.postProcessGeneration();
++        this.level.startTickingChunk(this);
++        io.papermc.paper.chunk.system.ChunkSystem.onChunkTicking(this, chunkHolder.vanillaChunkHolder);
++    }
++
++    public void onChunkNotTicking(io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder) {
++        io.papermc.paper.chunk.system.ChunkSystem.onChunkNotTicking(this, chunkHolder.vanillaChunkHolder);
++    }
++
++    public void onChunkEntityTicking(io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder) {
++        io.papermc.paper.chunk.system.ChunkSystem.onChunkEntityTicking(this, chunkHolder.vanillaChunkHolder);
++    }
++
++    public void onChunkNotEntityTicking(io.papermc.paper.chunk.system.scheduling.NewChunkHolder chunkHolder) {
++        io.papermc.paper.chunk.system.ChunkSystem.onChunkNotEntityTicking(this, chunkHolder.vanillaChunkHolder);
++    }
++    // Paper end - new load callbacks
++
++    // CraftBukkit start
++    public void loadCallback() {
++        if (this.loadedTicketLevel) { LOGGER.error("Double calling chunk load!", new Throwable()); } // Paper
++        // Paper - rewrite chunk system - move into separate callback
 +        this.loadedTicketLevel = true;
-+        // Paper end - neighbour cache
++        // Paper - rewrite chunk system - move into separate callback
 +        org.bukkit.Server server = this.level.getCraftServer();
-+        this.level.getChunkSource().addLoadedChunk(this); // Paper
++        // Paper - rewrite chunk system - move into separate callback
 +        ((ServerLevel)this.level).getChunkSource().chunkMap.playerChunkManager.onChunkLoad(this.chunkPos.x, this.chunkPos.z); // Paper - rewrite player chunk management
 +        if (server != null) {
 +            /*
@@ -1021,7 +1024,7 @@
 +        if (!this.loadedTicketLevel) { LOGGER.error("Double calling chunk unload!", new Throwable()); } // Paper
 +        org.bukkit.Server server = this.level.getCraftServer();
 +        this.chunkHolder.getEntityChunk().callEntitiesUnloadEvent(); // Paper - rewrite chunk system
-+        org.bukkit.event.world.ChunkUnloadEvent unloadEvent = new org.bukkit.event.world.ChunkUnloadEvent(this.bukkitChunk, this.isUnsaved());
++        org.bukkit.event.world.ChunkUnloadEvent unloadEvent = new org.bukkit.event.world.ChunkUnloadEvent(this.bukkitChunk, true); // Paper - rewrite chunk system - force save to true so that mustNotSave is correctly set below
 +        server.getPluginManager().callEvent(unloadEvent);
 +        // note: saving can be prevented, but not forced if no saving is actually required
 +        this.mustNotSave = !unloadEvent.isSaveChunk();
@@ -1043,9 +1046,26 @@
 +        // Paper end
 +    }
 +
++    // Paper start - add dirty system to tick lists
++    @Override
++    public void setUnsaved(boolean needsSaving) {
++        if (!needsSaving) {
++            this.blockTicks.clearDirty();
++            this.fluidTicks.clearDirty();
++        }
++        super.setUnsaved(needsSaving);
++    }
++    // Paper end - add dirty system to tick lists
++
 +    @Override
 +    public boolean isUnsaved() {
-+        return super.isUnsaved() && !this.mustNotSave;
++        // Paper start - add dirty system to tick lists
++        long gameTime = this.level.getLevelData().getGameTime();
++        if (this.blockTicks.isDirty(gameTime) || this.fluidTicks.isDirty(gameTime)) {
++            return true;
++        }
++        // Paper end - add dirty system to tick lists
++        return super.isUnsaved(); // Paper - rewrite chunk system - do NOT clobber the dirty flag
 +    }
 +    // CraftBukkit end
 +
@@ -1097,7 +1117,7 @@
              }
  
          });
-@@ -481,27 +1025,35 @@
+@@ -481,27 +1045,35 @@
  
      @Override
      public Stream<BlockPos> getLights() {
@@ -1146,7 +1166,7 @@
                      }
                  }
  
-@@ -509,37 +1061,47 @@
+@@ -509,37 +1081,47 @@
              }
          }
  
@@ -1208,7 +1228,7 @@
      }
  
      public void unpackTicks(long time) {
-@@ -563,7 +1125,7 @@
+@@ -563,7 +1145,7 @@
      }
  
      public ChunkHolder.FullChunkStatus getFullStatus() {
@@ -1217,7 +1237,7 @@
      }
  
      public void setFullStatus(Supplier<ChunkHolder.FullChunkStatus> levelTypeProvider) {
-@@ -573,50 +1135,59 @@
+@@ -573,50 +1155,59 @@
      public void clearAllBlockEntities() {
          this.blockEntities.values().forEach(BlockEntity::setRemoved);
          this.blockEntities.clear();
@@ -1300,7 +1320,7 @@
                  } else {
                      return null;
                  }
-@@ -637,111 +1208,126 @@
+@@ -637,111 +1228,126 @@
          this.clientLightReady = shouldRenderOnUpdate;
      }
  

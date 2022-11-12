@@ -475,7 +475,7 @@
 +        // CraftBukkit end
          if (nbt.contains("CustomName", 8)) {
 -            this.name = Component.Serializer.fromJson(nbt.getString("CustomName"));
-+            this.name = net.minecraft.server.MCUtil.getBaseComponentFromNbt("CustomName", nbt); // Paper - Catch ParseException
++            this.name = io.papermc.paper.util.MCUtil.getBaseComponentFromNbt("CustomName", nbt); // Paper - Catch ParseException
          }
  
          this.lockKey = LockCode.fromTag(nbt);

@@ -43,7 +43,7 @@
  import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
  import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
  import net.minecraft.network.protocol.game.DebugPackets;
-+import net.minecraft.server.MCUtil;
++import io.papermc.paper.util.MCUtil;
 +import net.minecraft.server.MinecraftServer;
  import net.minecraft.server.level.progress.ChunkProgressListener;
  import net.minecraft.server.network.ServerPlayerConnection;
@@ -166,7 +166,7 @@
 +        this.playerChunkTickRangeMap.add(player, chunkX, chunkZ, DistanceManager.MOB_SPAWN_RANGE); // Paper - optimise ChunkMap#anyPlayerCloseEnoughForSpawning
 +        // Paper start - per player mob spawning
 +        if (this.playerMobDistanceMap != null) {
-+            this.playerMobDistanceMap.add(player, chunkX, chunkZ, net.minecraft.server.ChunkSystem.getTickViewDistance(player));
++            this.playerMobDistanceMap.add(player, chunkX, chunkZ, io.papermc.paper.chunk.system.ChunkSystem.getTickViewDistance(player));
 +        }
 +        // Paper end - per player mob spawning
 +        // Paper start - use distance map to optimise entity tracker
@@ -174,7 +174,7 @@
 +            com.destroystokyo.paper.util.misc.PlayerAreaMap trackMap = this.playerEntityTrackerTrackMaps[i];
 +            int trackRange = this.entityTrackerTrackRanges[i];
 +
-+            trackMap.add(player, chunkX, chunkZ, Math.min(trackRange, net.minecraft.server.ChunkSystem.getSendViewDistance(player)));
++            trackMap.add(player, chunkX, chunkZ, Math.min(trackRange, io.papermc.paper.chunk.system.ChunkSystem.getSendViewDistance(player)));
 +        }
 +        // Paper end - use distance map to optimise entity tracker
 +        this.playerGeneralAreaMap.add(player, chunkX, chunkZ, GENERAL_AREA_MAP_SQUARE_RADIUS); // Paper - optimise checkDespawn
@@ -208,7 +208,7 @@
 +        this.playerChunkTickRangeMap.update(player, chunkX, chunkZ, DistanceManager.MOB_SPAWN_RANGE); // Paper - optimise ChunkMap#anyPlayerCloseEnoughForSpawning
 +        // Paper start - per player mob spawning
 +        if (this.playerMobDistanceMap != null) {
-+            this.playerMobDistanceMap.update(player, chunkX, chunkZ, net.minecraft.server.ChunkSystem.getTickViewDistance(player));
++            this.playerMobDistanceMap.update(player, chunkX, chunkZ, io.papermc.paper.chunk.system.ChunkSystem.getTickViewDistance(player));
 +        }
 +        // Paper end - per player mob spawning
 +        // Paper start - use distance map to optimise entity tracker
@@ -216,7 +216,7 @@
 +            com.destroystokyo.paper.util.misc.PlayerAreaMap trackMap = this.playerEntityTrackerTrackMaps[i];
 +            int trackRange = this.entityTrackerTrackRanges[i];
 +
-+            trackMap.update(player, chunkX, chunkZ, Math.min(trackRange, net.minecraft.server.ChunkSystem.getSendViewDistance(player)));
++            trackMap.update(player, chunkX, chunkZ, Math.min(trackRange, io.papermc.paper.chunk.system.ChunkSystem.getSendViewDistance(player)));
 +        }
 +        // Paper end - use distance map to optimise entity tracker
 +        this.playerGeneralAreaMap.update(player, chunkX, chunkZ, GENERAL_AREA_MAP_SQUARE_RADIUS); // Paper - optimise checkDespawn
@@ -665,9 +665,9 @@
 -        return new ReportedException(crashReport);
 +
 +        stringbuilder.append("Updating:").append(System.lineSeparator());
-+        net.minecraft.server.ChunkSystem.getUpdatingChunkHolders(this.level).forEach(consumer); // Paper
++        io.papermc.paper.chunk.system.ChunkSystem.getUpdatingChunkHolders(this.level).forEach(consumer); // Paper
 +        stringbuilder.append("Visible:").append(System.lineSeparator());
-+        net.minecraft.server.ChunkSystem.getVisibleChunkHolders(this.level).forEach(consumer); // Paper
++        io.papermc.paper.chunk.system.ChunkSystem.getVisibleChunkHolders(this.level).forEach(consumer); // Paper
 +        CrashReport crashreport = CrashReport.forThrowable(exception, "Chunk loading");
 +        CrashReportCategory crashreportsystemdetails = crashreport.addCategory("Chunk loading");
 +
@@ -1319,7 +1319,7 @@
  
      public int size() {
 -        return this.visibleChunkMap.size();
-+        return net.minecraft.server.ChunkSystem.getVisibleChunkHolderCount(this.level); // Paper
++        return io.papermc.paper.chunk.system.ChunkSystem.getVisibleChunkHolderCount(this.level); // Paper
      }
  
 -    public net.minecraft.server.level.DistanceManager getDistanceManager() {
@@ -1329,7 +1329,7 @@
  
      protected Iterable<ChunkHolder> getChunks() {
 -        return Iterables.unmodifiableIterable(this.visibleChunkMap.values());
-+        return Iterables.unmodifiableIterable(net.minecraft.server.ChunkSystem.getVisibleChunkHolders(this.level)); // Paper
++        return Iterables.unmodifiableIterable(io.papermc.paper.chunk.system.ChunkSystem.getVisibleChunkHolders(this.level)); // Paper
      }
  
      void dumpChunks(Writer writer) throws IOException {
@@ -1471,8 +1471,8 @@
 +        this.readChunk(chunkPos);
 +
 +        return regionFile.getStatusIfCached(chunkPos.x, chunkPos.z);
-     }
- 
++    }
++
 +    public void updateChunkStatusOnDisk(ChunkPos chunkPos, @Nullable CompoundTag compound) throws IOException {
 +        net.minecraft.world.level.chunk.storage.RegionFile regionFile = regionFileCache.getRegionFile(chunkPos, false);
 +
@@ -1480,11 +1480,11 @@
 +    }
 +
 +    public ChunkAccess getUnloadingChunk(int chunkX, int chunkZ) {
-+        ChunkHolder chunkHolder = net.minecraft.server.ChunkSystem.getUnloadingChunkHolder(this.level, chunkX, chunkZ);
++        ChunkHolder chunkHolder = io.papermc.paper.chunk.system.ChunkSystem.getUnloadingChunkHolder(this.level, chunkX, chunkZ);
 +        return chunkHolder == null ? null : chunkHolder.getAvailableChunkNow();
-+    }
+     }
 +    // Paper end
-+
+ 
      boolean anyPlayerCloseEnoughForSpawning(ChunkPos pos) {
 -        long l = pos.toLong();
 -        if (!this.distanceManager.hasPlayersNearby(l)) {
@@ -1582,7 +1582,7 @@
          }
      }
  
-@@ -977,156 +1058,155 @@
+@@ -977,156 +1058,152 @@
      }
  
      void updatePlayerStatus(ServerPlayer player, boolean added) {
@@ -1753,24 +1753,22 @@
 +        // Paper start - per player view distance
 +        // there can be potential desync with player's last mapped section and the view distance map, so use the
 +        // view distance map here.
-+        List<ServerPlayer> ret = new java.util.ArrayList<>(4);
++        com.destroystokyo.paper.util.misc.PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<ServerPlayer> players = this.playerChunkManager.broadcastMap.getObjectsInRange(chunkPos);
++        if (players == null) {
++            return java.util.Collections.emptyList();
++        }
  
 -        for(ServerPlayer serverPlayer : set) {
 -            SectionPos sectionPos = serverPlayer.getLastSectionPos();
 -            if (onlyOnWatchDistanceEdge && isChunkOnRangeBorder(chunkPos.x, chunkPos.z, sectionPos.x(), sectionPos.z(), this.viewDistance) || !onlyOnWatchDistanceEdge && isChunkInRange(chunkPos.x, chunkPos.z, sectionPos.x(), sectionPos.z(), this.viewDistance)) {
 -                builder.add(serverPlayer);
-+        com.destroystokyo.paper.util.misc.PooledLinkedHashSets.PooledObjectLinkedOpenHashSet<ServerPlayer> players = this.playerChunkManager.broadcastMap.getObjectsInRange(chunkPos);
-+        if (players == null) {
-+            return ret;
-+        }
++        List<ServerPlayer> ret = new java.util.ArrayList<>(players.size());
 +
 +        Object[] backingSet = players.getBackingSet();
 +        for (int i = 0, len = backingSet.length; i < len; ++i) {
-+            Object temp = backingSet[i];
-+            if (!(temp instanceof ServerPlayer)) {
++            if (!(backingSet[i] instanceof ServerPlayer player)) {
 +                continue;
              }
-+            ServerPlayer player = (ServerPlayer)temp;
 +            if (!this.playerChunkManager.isChunkSent(player, chunkPos.x, chunkPos.z, onlyOnWatchDistanceEdge)) {
 +                continue;
 +            }
@@ -1786,9 +1784,8 @@
 +        org.spigotmc.AsyncCatcher.catchOp("entity track"); // Spigot
 +        // Paper start - ignore and warn about illegal addEntity calls instead of crashing server
 +        if (!entity.valid || entity.level != this.level || this.entityMap.containsKey(entity.getId())) {
-+            new Throwable("[ERROR] Illegal PlayerChunkMap::addEntity for world " + this.level.getWorld().getName()
-+                + ": " + entity  + (this.entityMap.containsKey(entity.getId()) ? " ALREADY CONTAINED (This would have crashed your server)" : ""))
-+                .printStackTrace();
++            LOGGER.error("Illegal ChunkMap::addEntity for world " + this.level.getWorld().getName()
++                + ": " + entity  + (this.entityMap.containsKey(entity.getId()) ? " ALREADY CONTAINED (This would have crashed your server)" : ""), new Throwable());
 +            return;
 +        }
 +        if (entity instanceof ServerPlayer && ((ServerPlayer) entity).supressTrackerForLogin) return; // Delay adding to tracker until after list packets
@@ -1835,7 +1832,7 @@
                              }
                          }
                      }
-@@ -1137,104 +1217,213 @@
+@@ -1137,104 +1214,213 @@
      }
  
      protected void removeEntity(Entity entity) {
@@ -2103,7 +2100,7 @@
      }
  
      public PoiManager getPoiManager() {
-@@ -1249,14 +1438,15 @@
+@@ -1249,14 +1435,15 @@
          this.chunkStatusListener.onChunkStatusChange(chunkPos, levelType);
      }
  
@@ -2123,7 +2120,7 @@
          }
  
          @Nullable
-@@ -1267,42 +1457,77 @@
+@@ -1267,42 +1454,77 @@
  
          @Nullable
          @Override
@@ -2217,7 +2214,7 @@
              }
  
          }
-@@ -1310,19 +1535,24 @@
+@@ -1310,19 +1532,24 @@
          public void broadcastAndSend(Packet<?> packet) {
              this.broadcast(packet);
              if (this.entity instanceof ServerPlayer) {
@@ -2245,7 +2242,7 @@
              if (this.seenBy.remove(player.connection)) {
                  this.serverEntity.removePairing(player);
              }
-@@ -1330,13 +1560,24 @@
+@@ -1330,13 +1557,24 @@
          }
  
          public void updatePlayer(ServerPlayer player) {
@@ -2276,7 +2273,7 @@
                      if (this.seenBy.add(player.connection)) {
                          this.serverEntity.addPairing(player);
                      }
-@@ -1353,9 +1594,13 @@
+@@ -1353,9 +1591,13 @@
  
          private int getEffectiveRange() {
              int i = this.range;
@@ -2291,7 +2288,7 @@
                  if (j > i) {
                      i = j;
                  }
-@@ -1365,8 +1610,12 @@
+@@ -1365,10 +1607,33 @@
          }
  
          public void updatePlayers(List<ServerPlayer> players) {
@@ -2303,6 +2300,27 @@
 +                ServerPlayer entityplayer = (ServerPlayer) iterator.next();
 +
 +                this.updatePlayer(entityplayer);
++            }
++
++        }
++        // Paper start
++        // This method should only be used if the data of an entity could have became desynced
++        // due to interactions on the client.
++        public void resendPossiblyDesyncedEntity(ServerPlayer player) {
++            if (player.getBukkitEntity().canSee(entity.getBukkitEntity())) {
++                // This will prevent the entity data from being cleared, so that ONLY this player
++                // will have its entity data updated and it won't dirty the datatracker for other players.
++                this.serverEntity.clearDirtyEntityData = false;
++                this.serverEntity.sendPairingData(player.connection::send, player);
++                this.serverEntity.clearDirtyEntityData = true;
              }
++        }
  
++        public void resendPossiblyDesyncedEntityData(ServerPlayer player) {
++            if (player.getBukkitEntity().canSee(entity.getBukkitEntity())) {
++                player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket(entity.getId(), entity.getEntityData(), true, false));
++            }
          }
++        // Paper end
+     }
+ }

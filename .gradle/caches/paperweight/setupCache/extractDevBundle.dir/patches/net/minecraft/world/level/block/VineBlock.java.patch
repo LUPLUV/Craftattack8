@@ -182,7 +182,7 @@
 -            Direction direction = Direction.getRandom(random);
 -            BlockPos blockPos = pos.above();
 -            if (direction.getAxis().isHorizontal() && !state.getValue(getPropertyForFace(direction))) {
-+        if (random.nextInt(Math.max(1, (int) (100.0F / world.spigotConfig.vineModifier) * 4)) == 0) { // Spigot
++        if (random.nextFloat() < (world.spigotConfig.vineModifier / (100.0f * 4))) { // Spigot - SPIGOT-7159: Better modifier resolution
 +            Direction enumdirection = Direction.getRandom(random);
 +            BlockPos blockposition1 = pos.above();
 +            BlockPos blockposition2;

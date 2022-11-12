@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import net.minecraft.server.MCUtil;
+import io.papermc.paper.util.MCUtil;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerLevel;
@@ -105,7 +105,7 @@ public final class ChunkDebugCommand implements PaperSubcommand {
             int ticking = 0;
             int entityTicking = 0;
 
-            for (final ChunkHolder chunk : net.minecraft.server.ChunkSystem.getVisibleChunkHolders(world)) {
+            for (final ChunkHolder chunk : io.papermc.paper.chunk.system.ChunkSystem.getVisibleChunkHolders(world)) {
                 if (chunk.getFullChunkNowUnchecked() == null) {
                     continue;
                 }

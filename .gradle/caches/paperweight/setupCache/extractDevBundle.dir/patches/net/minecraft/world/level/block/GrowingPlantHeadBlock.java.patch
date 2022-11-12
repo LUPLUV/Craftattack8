@@ -13,7 +13,7 @@
      public static final IntegerProperty AGE = BlockStateProperties.AGE_25;
      public static final int MAX_AGE = 25;
      private final double growPerTickProbability;
-@@ -23,40 +25,61 @@
+@@ -23,40 +25,59 @@
      protected GrowingPlantHeadBlock(BlockBehaviour.Properties settings, Direction growthDirection, VoxelShape outlineShape, boolean tickWater, double growthChance) {
          super(settings, growthDirection, outlineShape, tickWater);
          this.growPerTickProbability = growthChance;
@@ -39,21 +39,19 @@
 -            BlockPos blockPos = pos.relative(this.growthDirection);
 -            if (this.canGrowInto(world.getBlockState(blockPos))) {
 -                world.setBlockAndUpdate(blockPos, this.getGrowIntoState(state, world.random));
-+        // Paper start
-+        final int modifier;
-+        if (state.is(Blocks.TWISTING_VINES) || state.is(Blocks.TWISTING_VINES_PLANT)) {
-+            modifier = world.spigotConfig.twistingVinesModifier;
-+        } else if (state.is(Blocks.WEEPING_VINES) || state.is(Blocks.WEEPING_VINES_PLANT)) {
-+            modifier = world.spigotConfig.weepingVinesModifier;
-+        } else if (state.is(Blocks.CAVE_VINES) || state.is(Blocks.CAVE_VINES_PLANT)) {
-+            modifier = world.spigotConfig.caveVinesModifier;
-+        } else if (state.is(Blocks.KELP) || state.is(Blocks.KELP_PLANT)) {
++        // Spigot start
++        int modifier;
++        if (this == Blocks.KELP) {
 +            modifier = world.spigotConfig.kelpModifier;
++        } else if (this == Blocks.TWISTING_VINES) {
++            modifier = world.spigotConfig.twistingVinesModifier;
++        } else if (this == Blocks.WEEPING_VINES) {
++            modifier = world.spigotConfig.weepingVinesModifier;
 +        } else {
-+            modifier = 100; // Above cases are exhaustive as of 1.18
++            modifier = world.spigotConfig.caveVinesModifier;
 +        }
-+        if ((Integer) state.getValue(GrowingPlantHeadBlock.AGE) < 25 && random.nextDouble() < (modifier / 100.0D) * this.growPerTickProbability) { // Spigot // Paper - fix growth modifier having the reverse effect
-+            // Paper end
++        if ((Integer) state.getValue(GrowingPlantHeadBlock.AGE) < 25 && random.nextDouble() < ((modifier / 100.0D) * this.growPerTickProbability)) { // Spigot - SPIGOT-7159: Better modifier resolution
++            // Spigot end
 +            BlockPos blockposition1 = pos.relative(this.growthDirection);
 +
 +            if (this.canGrowInto(world.getBlockState(blockposition1))) {
@@ -85,7 +83,7 @@
      }
  
      protected BlockState updateBodyAfterConvertedFromHead(BlockState from, BlockState to) {
-@@ -66,23 +89,23 @@
+@@ -66,23 +87,23 @@
      @Override
      public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor world, BlockPos pos, BlockPos neighborPos) {
          if (direction == this.growthDirection.getOpposite() && !state.canSurvive(world, pos)) {
@@ -115,7 +113,7 @@
      }
  
      @Override
-@@ -97,13 +120,13 @@
+@@ -97,13 +118,13 @@
  
      @Override
      public void performBonemeal(ServerLevel world, RandomSource random, BlockPos pos, BlockState state) {

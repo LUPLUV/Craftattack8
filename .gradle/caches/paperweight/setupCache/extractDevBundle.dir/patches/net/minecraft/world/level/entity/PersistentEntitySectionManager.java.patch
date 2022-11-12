@@ -94,7 +94,7 @@
 +            // I don't want to know why this is a generic type.
 +            Entity entityCasted = (Entity)entity;
 +            boolean wasRemoved = entityCasted.isRemoved();
-+            net.minecraft.server.ChunkSystem.onEntityPreAdd((net.minecraft.server.level.ServerLevel)entityCasted.level, entityCasted);
++            io.papermc.paper.chunk.system.ChunkSystem.onEntityPreAdd((net.minecraft.server.level.ServerLevel)entityCasted.level, entityCasted);
 +            if (!wasRemoved && entityCasted.isRemoved()) {
 +                // removed by callback
 +                return false;

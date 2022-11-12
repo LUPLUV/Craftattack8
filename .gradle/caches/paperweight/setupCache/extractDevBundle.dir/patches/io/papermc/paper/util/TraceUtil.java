@@ -17,4 +17,9 @@ public final class TraceUtil {
         StacktraceDeobfuscator.INSTANCE.deobfuscateThrowable(throwable);
         throwable.printStackTrace();
     }
+
+    public static void printStackTrace(Throwable thr) {
+        StacktraceDeobfuscator.INSTANCE.deobfuscateThrowable(thr);
+        thr.printStackTrace();
+    }
 }

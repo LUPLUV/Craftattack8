@@ -35,7 +35,7 @@
      private static final Logger LOGGER = LogUtils.getLogger();
      private static final int TOLERANCE_LEVEL_ROTATION = 1;
      private final ServerLevel level;
-@@ -49,19 +58,25 @@
+@@ -49,19 +58,26 @@
      private int yRotp;
      private int xRotp;
      private int yHeadRotp;
@@ -49,6 +49,7 @@
      private boolean wasOnGround;
 +    // CraftBukkit start
 +    final Set<ServerPlayerConnection> trackedPlayers; // Paper - private -> package
++    public boolean clearDirtyEntityData = true; // Paper
  
 -    public ServerEntity(ServerLevel world, Entity entity, int tickInterval, boolean alwaysUpdateVelocity, Consumer<Packet<?>> receiver) {
 -        this.level = world;
@@ -68,7 +69,7 @@
          this.positionCodec.setBase(entity.trackingPosition());
          this.yRotp = Mth.floor(entity.getYRot() * 256.0F / 360.0F);
          this.xRotp = Mth.floor(entity.getXRot() * 256.0F / 360.0F);
-@@ -71,24 +86,35 @@
+@@ -71,24 +87,35 @@
  
      public void sendChanges() {
          List<Entity> list = this.entity.getPassengers();
@@ -117,7 +118,7 @@
                              }
                          }
                      }
-@@ -99,12 +125,16 @@
+@@ -99,12 +126,16 @@
          }
  
          if (this.tickCount % this.updateInterval == 0 || this.entity.hasImpulse || this.entity.getEntityData().isDirty()) {
@@ -139,7 +140,7 @@
                      this.yRotp = i;
                      this.xRotp = j;
                  }
-@@ -114,65 +144,74 @@
+@@ -114,65 +145,74 @@
                  this.wasRiding = true;
              } else {
                  ++this.teleportDelay;
@@ -250,7 +251,7 @@
              }
  
              this.entity.hasImpulse = false;
-@@ -180,7 +219,27 @@
+@@ -180,7 +220,27 @@
  
          ++this.tickCount;
          if (this.entity.hurtMarked) {
@@ -279,7 +280,7 @@
              this.entity.hurtMarked = false;
          }
  
-@@ -188,92 +247,131 @@
+@@ -188,92 +248,131 @@
  
      public void removePairing(ServerPlayer player) {
          this.entity.stopSeenByPlayer(player);
@@ -313,7 +314,7 @@
 +        consumer.accept(packet);
          if (!this.entity.getEntityData().isEmpty()) {
 -            sender.accept(new ClientboundSetEntityDataPacket(this.entity.getId(), this.entity.getEntityData(), true));
-+            consumer.accept(new ClientboundSetEntityDataPacket(this.entity.getId(), this.entity.getEntityData(), true));
++            consumer.accept(new ClientboundSetEntityDataPacket(this.entity.getId(), this.entity.getEntityData(), true, this.clearDirtyEntityData)); // Paper
          }
  
 -        boolean bl = this.trackDelta;
@@ -441,11 +442,12 @@
                  this.broadcastAndSend(new ClientboundUpdateAttributesPacket(this.entity.getId(), set));
              }
  
-@@ -282,10 +380,16 @@
+@@ -282,10 +381,17 @@
  
      }
  
 +    // Paper start - Add broadcast method
++    @Deprecated(forRemoval = true)
 +    void broadcast(Packet<?> packet) {
 +        this.broadcast.accept(packet);
 +    }

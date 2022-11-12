@@ -133,7 +133,7 @@
              }
          }
  
-@@ -114,10 +121,18 @@
+@@ -114,10 +121,22 @@
  
      @Override
      public void entityInside(BlockState state, Level world, BlockPos pos, Entity entity) {
@@ -148,12 +148,16 @@
 +
 +                if (!event.isCancelled()) {
 +                    entity.setSecondsOnFire(event.getDuration(), false);
++                    // Paper start - fix EntityCombustEvent cancellation.
++                } else {
++                    entity.setRemainingFireTicks(entity.getRemainingFireTicks() - 1);
++                    // Paper end
 +                }
 +                // CraftBukkit end
              }
          }
  
-@@ -125,70 +140,83 @@
+@@ -125,70 +144,83 @@
          super.entityInside(state, world, pos, entity);
      }
  

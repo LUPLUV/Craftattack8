@@ -22,7 +22,6 @@ import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.inventory.ShulkerBoxMenu;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.inventory.SmithingMenu;
 import net.minecraft.world.inventory.SmokerMenu;
 import net.minecraft.world.inventory.StonecutterMenu;
 import net.minecraft.world.item.ItemStack;
@@ -189,10 +188,8 @@ public class CraftContainer extends AbstractContainerMenu {
                 this.delegate = new HopperMenu(windowId, bottom, top);
                 break;
             case ANVIL:
-                this.setupAnvil(top, bottom); // SPIGOT-6783 - manually set up slots so we can use the delegated inventory and not the automatically created one
-                break;
             case SMITHING:
-                this.delegate = new SmithingMenu(windowId, bottom);
+                this.setupAnvil(top, bottom); // SPIGOT-6783 - manually set up slots so we can use the delegated inventory and not the automatically created one
                 break;
             case BEACON:
                 this.delegate = new BeaconMenu(windowId, bottom);

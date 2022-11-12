@@ -1306,6 +1306,7 @@ public final class NewChunkHolder {
                     if (!currState.isOrAfter(ChunkHolder.FullChunkStatus.BORDER) && nextState.isOrAfter(ChunkHolder.FullChunkStatus.BORDER)) {
                         nextState = this.updateCurrentState(ChunkHolder.FullChunkStatus.BORDER);
                         holderManager.ensureInAutosave(this);
+                        chunk.pushChunkIntoLoadedMap();
                         this.changeEntityChunkStatus(ChunkHolder.FullChunkStatus.BORDER);
                         chunk.onChunkLoad(this);
                         this.onFullChunkLoadChange(true, changedFullStatus);
@@ -1716,7 +1717,9 @@ public final class NewChunkHolder {
 
     public long lastAutoSave;
 
-    public boolean save(final boolean shutdown, final boolean unloading) {
+    public static final record SaveStat(boolean savedChunk, boolean savedEntityChunk, boolean savedPoiChunk) {}
+
+    public SaveStat save(final boolean shutdown, final boolean unloading) {
         TickThread.ensureTickThread(this.world, this.chunkX, this.chunkZ, "Cannot save data off-main");
 
         ChunkAccess chunk = this.getCurrentChunk();
@@ -1763,7 +1766,7 @@ public final class NewChunkHolder {
             }
         }
 
-        return executedUnloadTask | canSaveChunk | canSaveEntities | canSavePOI;
+        return executedUnloadTask | canSaveChunk | canSaveEntities | canSavePOI ? new SaveStat(executedUnloadTask || canSaveChunk, canSaveEntities, canSavePOI): null;
     }
 
     static final class AsyncChunkSerializeTask implements Runnable {
@@ -1838,6 +1841,8 @@ public final class NewChunkHolder {
 
                     task.queue();
 
+                    chunk.setUnsaved(false);
+
                     return true;
                 } catch (final ThreadDeath death) {
                     throw death;
@@ -1856,6 +1861,7 @@ public final class NewChunkHolder {
             } else {
                 RegionFileIOThread.scheduleSave(this.world, this.chunkX, this.chunkZ, save, RegionFileIOThread.RegionFileType.CHUNK_DATA);
             }
+            chunk.setUnsaved(false);
         } catch (final ThreadDeath death) {
             throw death;
         } catch (final Throwable thr) {

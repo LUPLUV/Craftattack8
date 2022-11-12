@@ -1,6 +1,6 @@
 package com.destroystokyo.paper.util.pooled;
 
-import net.minecraft.server.MCUtil;
+import io.papermc.paper.util.MCUtil;
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.ArrayDeque;

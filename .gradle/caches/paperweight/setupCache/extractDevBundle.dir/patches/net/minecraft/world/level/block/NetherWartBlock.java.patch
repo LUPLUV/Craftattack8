@@ -38,7 +38,7 @@
 -            world.setBlock(pos, state, 2);
 +        int i = (Integer) state.getValue(NetherWartBlock.AGE);
 +
-+        if (i < 3 && random.nextInt(Math.max(1, (int) (100.0F / world.spigotConfig.wartModifier) * 10)) == 0) { // Spigot
++        if (i < 3 && random.nextFloat() < (world.spigotConfig.wartModifier / (100.0f * 10))) { // Spigot - SPIGOT-7159: Better modifier resolution
 +            state = (BlockState) state.setValue(NetherWartBlock.AGE, i + 1);
 +            org.bukkit.craftbukkit.v1_19_R1.event.CraftEventFactory.handleBlockGrowEvent(world, pos, state, 2); // CraftBukkit
          }

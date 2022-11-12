@@ -113,7 +113,7 @@
      }
  
      @Override
-@@ -122,12 +133,12 @@
+@@ -122,21 +133,29 @@
  
      @Override
      protected void defineSynchedData() {
@@ -132,7 +132,17 @@
      }
  
      @Override
-@@ -136,7 +147,7 @@
+     public boolean canCollideWith(Entity other) {
+-        return Boat.canVehicleCollide(this, other);
++        // Paper start - fixed VehicleEntityCollisionEvent not called when colliding with player
++        boolean collides = Boat.canVehicleCollide(this, other);
++        if (!collides) {
++            return false;
++        }
++        org.bukkit.event.vehicle.VehicleEntityCollisionEvent collisionEvent = new org.bukkit.event.vehicle.VehicleEntityCollisionEvent((org.bukkit.entity.Vehicle) getBukkitEntity(), other.getBukkitEntity());
++
++        return collisionEvent.callEvent();
++        // Paper end
      }
  
      @Override
@@ -141,7 +151,7 @@
          return true;
      }
  
-@@ -152,48 +163,64 @@
+@@ -152,48 +171,64 @@
  
      @Override
      public Vec3 getDismountLocationForPassenger(LivingEntity passenger) {
@@ -235,7 +245,7 @@
                      break;
                  }
              }
-@@ -208,15 +235,38 @@
+@@ -208,15 +243,38 @@
              if (this.isInvulnerableTo(source)) {
                  return false;
              } else {
@@ -277,7 +287,7 @@
                          this.discard();
                      } else {
                          this.destroy(source);
-@@ -232,19 +282,21 @@
+@@ -232,19 +290,21 @@
  
      @Override
      protected float getBlockSpeedFactor() {
@@ -304,7 +314,7 @@
          }
  
      }
-@@ -264,7 +316,7 @@
+@@ -264,7 +324,7 @@
      }
  
      private static Pair<Vec3i, Vec3i> exits(RailShape shape) {
@@ -313,7 +323,7 @@
      }
  
      @Override
-@@ -274,6 +326,14 @@
+@@ -274,6 +334,14 @@
  
      @Override
      public void tick() {
@@ -328,7 +338,7 @@
          if (this.getHurtTime() > 0) {
              this.setHurtTime(this.getHurtTime() - 1);
          }
-@@ -283,17 +343,20 @@
+@@ -283,17 +351,20 @@
          }
  
          this.checkOutOfWorld();
@@ -357,7 +367,7 @@
                  this.setRot(this.getYRot(), this.getXRot());
              } else {
                  this.reapplyPosition();
-@@ -302,23 +365,25 @@
+@@ -302,23 +373,25 @@
  
          } else {
              if (!this.isNoGravity()) {
@@ -391,7 +401,7 @@
                  }
              } else {
                  this.comeOffTrack();
-@@ -326,38 +391,84 @@
+@@ -326,38 +399,84 @@
  
              this.checkInsideBlocks();
              this.setXRot(0.0F);
@@ -488,7 +498,7 @@
                      }
                  }
              }
-@@ -373,182 +484,207 @@
+@@ -373,182 +492,207 @@
      }
  
      protected double getMaxSpeed() {
@@ -804,7 +814,7 @@
              }
          }
  
-@@ -559,14 +695,15 @@
+@@ -559,14 +703,15 @@
      }
  
      protected void applyNaturalSlowdown() {
@@ -825,7 +835,7 @@
      }
  
      @Nullable
-@@ -574,32 +711,36 @@
+@@ -574,32 +719,36 @@
          int i = Mth.floor(x);
          int j = Mth.floor(y);
          int k = Mth.floor(z);
@@ -882,7 +892,7 @@
              }
  
              return this.getPos(x, y, z);
-@@ -613,42 +754,46 @@
+@@ -613,42 +762,46 @@
          int i = Mth.floor(x);
          int j = Mth.floor(y);
          int k = Mth.floor(z);
@@ -957,7 +967,7 @@
                  y += 0.5D;
              }
  
-@@ -660,8 +805,9 @@
+@@ -660,8 +813,9 @@
  
      @Override
      public AABB getBoundingBoxForCulling() {
@@ -969,7 +979,7 @@
      }
  
      @Override
-@@ -687,56 +833,70 @@
+@@ -687,56 +841,70 @@
      public void push(Entity entity) {
          if (!this.level.isClientSide) {
              if (!entity.noPhysics && !this.noPhysics) {
@@ -1080,7 +1090,7 @@
                          }
                      }
  
-@@ -750,8 +910,8 @@
+@@ -750,8 +918,8 @@
          this.lx = x;
          this.ly = y;
          this.lz = z;
@@ -1091,7 +1101,7 @@
          this.lSteps = interpolationSteps + 2;
          this.setDeltaMovement(this.lxd, this.lyd, this.lzd);
      }
-@@ -765,33 +925,33 @@
+@@ -765,33 +933,33 @@
      }
  
      public void setDamage(float damageWobbleStrength) {
@@ -1132,7 +1142,7 @@
      }
  
      public BlockState getDefaultDisplayBlockState() {
-@@ -799,7 +959,7 @@
+@@ -799,7 +967,7 @@
      }
  
      public int getDisplayOffset() {
@@ -1141,7 +1151,7 @@
      }
  
      public int getDefaultDisplayOffset() {
-@@ -807,21 +967,21 @@
+@@ -807,21 +975,21 @@
      }
  
      public void setDisplayBlockState(BlockState state) {
@@ -1167,7 +1177,7 @@
      }
  
      @Override
-@@ -832,6 +992,7 @@
+@@ -832,6 +1000,7 @@
      @Override
      public ItemStack getPickResult() {
          Item item;
@@ -1175,7 +1185,7 @@
          switch (this.getMinecartType()) {
              case FURNACE:
                  item = Items.FURNACE_MINECART;
-@@ -856,12 +1017,31 @@
+@@ -856,12 +1025,31 @@
      }
  
      public static enum Type {

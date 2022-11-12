@@ -18,11 +18,12 @@ import io.papermc.paper.configuration.transformation.Transformations;
 import io.papermc.paper.configuration.transformation.global.LegacyPaperConfig;
 import io.papermc.paper.configuration.transformation.world.FeatureSeedsGeneration;
 import io.papermc.paper.configuration.transformation.world.LegacyPaperWorldConfig;
+import io.papermc.paper.configuration.transformation.world.ZeroWorldHeight;
 import io.papermc.paper.configuration.type.BooleanOrDefault;
 import io.papermc.paper.configuration.type.DoubleOrDefault;
 import io.papermc.paper.configuration.type.Duration;
 import io.papermc.paper.configuration.type.EngineMode;
-import io.papermc.paper.configuration.type.IntOrDefault;
+import io.papermc.paper.configuration.type.IntOr;
 import io.papermc.paper.configuration.type.fallback.FallbackValueSerializer;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
@@ -36,7 +37,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.bukkit.command.Command;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.VisibleForTesting;
@@ -59,9 +59,7 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -206,7 +204,8 @@ public class PaperConfigurations extends Configurations<GlobalConfiguration, Wor
                     .register(new TypeToken<Reference2LongMap<?>>() {}, new FastutilMapSerializer.SomethingToPrimitive<Reference2LongMap<?>>(Reference2LongOpenHashMap::new, Long.TYPE))
                     .register(new TypeToken<Table<?, ?, ?>>() {}, new TableSerializer())
                     .register(new StringRepresentableSerializer())
-                    .register(IntOrDefault.SERIALIZER)
+                    .register(IntOr.Default.SERIALIZER)
+                    .register(IntOr.Disabled.SERIALIZER)
                     .register(DoubleOrDefault.SERIALIZER)
                     .register(BooleanOrDefault.SERIALIZER)
                     .register(Duration.SERIALIZER)
@@ -233,7 +232,11 @@ public class PaperConfigurations extends Configurations<GlobalConfiguration, Wor
             builder.addAction(path, TransformAction.remove());
         }
         builder.build().apply(node);
-        // ADD FUTURE TRANSFORMS HERE
+
+        final ConfigurationTransformation.VersionedBuilder versionedBuilder = Transformations.versionedBuilder();
+        ZeroWorldHeight.apply(versionedBuilder);
+        // ADD FUTURE VERSIONED TRANSFORMS TO versionedBuilder HERE
+        versionedBuilder.build().apply(node);
     }
 
     @Override
@@ -242,8 +245,8 @@ public class PaperConfigurations extends Configurations<GlobalConfiguration, Wor
         for (NodePath path : RemovedConfigurations.REMOVED_GLOBAL_PATHS) {
             builder.addAction(path, TransformAction.remove());
         }
+        // ADD FUTURE TRANSFORMS TO builder HERE
         builder.build().apply(node);
-        // ADD FUTURE TRANSFORMS HERE
     }
 
     private static final List<Transformations.DefaultsAware> DEFAULT_AWARE_TRANSFORMATIONS = List.of(FeatureSeedsGeneration::apply);
@@ -309,17 +312,17 @@ public class PaperConfigurations extends Configurations<GlobalConfiguration, Wor
             final String legacyFileName = legacyConfig.getFileName().toString();
             try {
                 if (Files.exists(configDir) && !Files.isDirectory(configDir)) {
-                    throw new RuntimeException("Paper needs to create a '" + CONFIG_DIR + "' folder in the root of your server. You already have a non-directory named '" + CONFIG_DIR + "'. Please remove it and restart the server.");
+                    throw new RuntimeException("Paper needs to create a '" + configDir.toAbsolutePath() + "' folder. You already have a non-directory named '" + configDir.toAbsolutePath() + "'. Please remove it and restart the server.");
                 }
                 final Path backupDir = configDir.resolve(BACKUP_DIR);
                 if (Files.exists(backupDir) && !Files.isDirectory(backupDir)) {
-                    throw new RuntimeException("Paper needs to create a '" + BACKUP_DIR + "' directory in the '" + CONFIG_DIR + "' folder. You already have a non-directory named '" + BACKUP_DIR + "'. Please remove it and restart the server.");
+                    throw new RuntimeException("Paper needs to create a '" + BACKUP_DIR + "' directory in the '" + configDir.toAbsolutePath() + "' folder. You already have a non-directory named '" + BACKUP_DIR + "'. Please remove it and restart the server.");
                 }
                 createDirectoriesSymlinkAware(backupDir);
                 final String backupFileName = legacyFileName + ".old";
                 final Path legacyConfigBackup = backupDir.resolve(backupFileName);
                 if (Files.exists(legacyConfigBackup) && !Files.isRegularFile(legacyConfigBackup)) {
-                    throw new RuntimeException("Paper needs to create a '" + backupFileName + "' file in the '" + BACKUP_DIR + "' folder. You already have a non-file named '" + backupFileName + "'. Please remove it and restart the server.");
+                    throw new RuntimeException("Paper needs to create a '" + backupFileName + "' file in the '" + backupDir.toAbsolutePath() + "' folder. You already have a non-file named '" + backupFileName + "'. Please remove it and restart the server.");
                 }
                 Files.move(legacyConfig.toRealPath(), legacyConfigBackup, StandardCopyOption.REPLACE_EXISTING); // make backup
                 if (Files.isSymbolicLink(legacyConfig)) {

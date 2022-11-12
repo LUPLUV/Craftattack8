@@ -213,8 +213,8 @@
 +    }
 +
 +    public void onUnload(long coordinate) { // Paper - rewrite chunk system
-+        int chunkX = net.minecraft.server.MCUtil.getCoordinateX(coordinate);
-+        int chunkZ = net.minecraft.server.MCUtil.getCoordinateZ(coordinate);
++        int chunkX = io.papermc.paper.util.MCUtil.getCoordinateX(coordinate);
++        int chunkZ = io.papermc.paper.util.MCUtil.getCoordinateZ(coordinate);
 +        io.papermc.paper.util.TickThread.ensureTickThread(this.world, chunkX, chunkZ, "Unloading poi chunk off-main");
 +        for (int section = this.levelHeightAccessor.getMinSection(); section < this.levelHeightAccessor.getMaxSection(); ++section) {
 +            long sectionPos = SectionPos.asLong(chunkX, section, chunkZ);

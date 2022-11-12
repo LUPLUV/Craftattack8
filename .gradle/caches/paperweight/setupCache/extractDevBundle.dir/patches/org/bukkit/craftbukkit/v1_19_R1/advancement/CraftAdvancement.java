@@ -35,6 +35,11 @@ public class CraftAdvancement implements org.bukkit.advancement.Advancement {
         return this.handle.getDisplay() == null ? null : this.handle.getDisplay().paper;
     }
 
+    @Deprecated @io.papermc.paper.annotation.DoNotUse
+    public AdvancementDisplay getDisplay0() { // May be called by plugins via Commodore
+        return this.handle.getDisplay() == null ? null : new CraftAdvancementDisplay(this.handle.getDisplay());
+    }
+
     @Override
     public org.bukkit.advancement.Advancement getParent() {
         return this.handle.getParent() == null ? null : this.handle.getParent().bukkit;

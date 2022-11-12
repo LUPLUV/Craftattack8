@@ -6,7 +6,7 @@ import it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet;
-import net.minecraft.server.MCUtil;
+import io.papermc.paper.util.MCUtil;
 
 public final class Delayed8WayDistancePropagator2D {
 

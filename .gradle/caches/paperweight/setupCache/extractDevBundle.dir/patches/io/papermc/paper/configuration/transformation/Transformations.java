@@ -1,9 +1,11 @@
 package io.papermc.paper.configuration.transformation;
 
+import io.papermc.paper.configuration.Configuration;
 import io.papermc.paper.configuration.Configurations;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.NodePath;
 import org.spongepowered.configurate.transformation.ConfigurationTransformation;
+import org.spongepowered.configurate.transformation.TransformAction;
 
 import static org.spongepowered.configurate.NodePath.path;
 
@@ -26,6 +28,10 @@ public final class Transformations {
             System.arraycopy(parents, 0, newPath, 0, parents.length);
             return newPath;
         });
+    }
+
+    public static ConfigurationTransformation.VersionedBuilder versionedBuilder() {
+        return ConfigurationTransformation.versionedBuilder().versionKey(Configuration.VERSION_FIELD);
     }
 
     @FunctionalInterface

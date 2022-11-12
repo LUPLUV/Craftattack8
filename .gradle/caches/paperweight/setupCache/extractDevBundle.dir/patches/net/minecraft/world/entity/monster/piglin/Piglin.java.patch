@@ -305,7 +305,7 @@
      }
  
      @Override
-@@ -378,15 +404,10 @@
+@@ -378,21 +404,16 @@
          if (EnchantmentHelper.hasBindingCurse(oldStack)) {
              return false;
          } else {
@@ -323,6 +323,13 @@
 +
 +            return flag && !flag1 ? true : (!flag && flag1 ? false : (this.isAdult() && !newStack.is(Items.CROSSBOW) && oldStack.is(Items.CROSSBOW) ? false : super.canReplaceCurrentItem(newStack, oldStack)));
          }
+     }
+ 
+     @Override
+     protected void pickUpItem(ItemEntity item) {
+-        this.onItemPickup(item);
++        // this.onItemPickup(item); // Paper - call in PiglinAi#pickUpItem after EntityPickupItemEvent is fired
+         PiglinAi.pickUpItem(this, item);
      }
  
 @@ -407,12 +428,13 @@

@@ -49,6 +49,7 @@ public class Ca8 extends JavaPlugin {
         getCommand("pwreset").setExecutor(new Pwreset());
         getCommand("options").setExecutor(new Options());
         getCommand("stats").setExecutor(new StatsCmd());
+        getCommand("install").setExecutor(new InstallCmd());
 
 
         /* Events */

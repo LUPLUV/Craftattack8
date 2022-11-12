@@ -38,12 +38,12 @@ public class CraftTurtle extends CraftAnimals implements Turtle {
     // Paper start
     @Override
     public org.bukkit.Location getHome() {
-        return net.minecraft.server.MCUtil.toLocation(getHandle().getLevel(), getHandle().getHomePos());
+        return io.papermc.paper.util.MCUtil.toLocation(getHandle().getLevel(), getHandle().getHomePos());
     }
 
     @Override
     public void setHome(org.bukkit.Location location) {
-        getHandle().setHomePos(net.minecraft.server.MCUtil.toBlockPosition(location));
+        getHandle().setHomePos(io.papermc.paper.util.MCUtil.toBlockPosition(location));
     }
 
     @Override

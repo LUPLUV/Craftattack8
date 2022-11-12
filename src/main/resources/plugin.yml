@@ -1,5 +1,5 @@
 name: Craftattack8
-version: 1.0
+version: 2.0.1
 api-version: 1.19
 author: LUPLUV
 main: dev.lupluv.ca8.Ca8
@@ -25,3 +25,4 @@ commands:
     permission: craftattack.command.options
   stats:
     permission: craftattack.command.stats
+  install:

@@ -2,7 +2,7 @@ package com.destroystokyo.paper.util.misc;
 
 import io.papermc.paper.util.IntegerUtil;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
-import net.minecraft.server.MCUtil;
+import io.papermc.paper.util.MCUtil;
 import net.minecraft.world.level.ChunkPos;
 
 /** @author Spottedleaf */

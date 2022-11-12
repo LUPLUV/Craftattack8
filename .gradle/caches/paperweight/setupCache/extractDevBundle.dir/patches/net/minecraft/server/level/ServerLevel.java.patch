@@ -49,7 +49,7 @@
  import net.minecraft.network.protocol.game.ClientboundSoundPacket;
  import net.minecraft.network.protocol.game.DebugPackets;
  import net.minecraft.resources.ResourceKey;
-+import net.minecraft.server.MCUtil;
++import io.papermc.paper.util.MCUtil;
  import net.minecraft.server.MinecraftServer;
  import net.minecraft.server.ServerScoreboard;
  import net.minecraft.server.level.progress.ChunkProgressListener;
@@ -105,7 +105,7 @@
      public static final BlockPos END_SPAWN_POINT = new BlockPos(100, 50, 0);
      private static final int MIN_RAIN_DELAY_TIME = 12000;
      private static final int MAX_RAIN_DELAY_TIME = 180000;
-@@ -162,79 +186,430 @@
+@@ -162,79 +186,432 @@
      private static final Logger LOGGER = LogUtils.getLogger();
      private static final int EMPTY_TIME_NO_TICK = 300;
      private static final int MAX_SCHEDULED_TICKS_PER_TICK = 65536;
@@ -168,7 +168,9 @@
 +    public boolean hasEntityMoveEvent = false; // Paper
 +    private final alternate.current.wire.WireHandler wireHandler = new alternate.current.wire.WireHandler(this); // Paper - optimize redstone (Alternate Current)
 +    public static Throwable getAddToWorldStackTrace(Entity entity) {
-+        return new Throwable(entity + " Added to world at " + new java.util.Date());
++        final Throwable thr = new Throwable(entity + " Added to world at " + new java.util.Date());
++        io.papermc.paper.util.StacktraceDeobfuscator.INSTANCE.deobfuscateThrowable(thr);
++        return thr;
 +    }
 +
 +    @Override public LevelChunk getChunkIfLoaded(int x, int z) { // Paper - this was added in world too but keeping here for NMS ABI
@@ -264,7 +266,7 @@
 +
 +        for (int cx = minChunkX; cx <= maxChunkX; ++cx) {
 +            for (int cz = minChunkZ; cz <= maxChunkZ; ++cz) {
-+                net.minecraft.server.ChunkSystem.scheduleChunkLoad(
++                io.papermc.paper.chunk.system.ChunkSystem.scheduleChunkLoad(
 +                    this, cx, cz, net.minecraft.world.level.chunk.ChunkStatus.FULL, true, priority, consumer
 +                );
 +            }
@@ -573,7 +575,7 @@
      }
  
      @Override
-@@ -247,20 +622,39 @@
+@@ -247,20 +624,39 @@
      }
  
      public void tick(BooleanSupplier shouldKeepTicking) {
@@ -619,7 +621,7 @@
              if (this.getGameRules().getBoolean(GameRules.RULE_WEATHER_CYCLE) && this.isRaining()) {
                  this.resetWeatherCycle();
              }
-@@ -268,83 +662,102 @@
+@@ -268,83 +664,102 @@
  
          this.updateSkyBrightness();
          this.tickTime();
@@ -757,7 +759,7 @@
              if (this.levelData.getGameRules().getBoolean(GameRules.RULE_DAYLIGHT)) {
                  this.setDayTime(this.levelData.getDayTime() + 1L);
              }
-@@ -357,135 +770,177 @@
+@@ -357,135 +772,177 @@
      }
  
      public void tickCustomSpawners(boolean spawnMonsters, boolean spawnAnimals) {
@@ -1013,7 +1015,7 @@
              }
          }
      }
-@@ -502,15 +957,20 @@
+@@ -502,15 +959,20 @@
          if (this.canSleepThroughNights()) {
              if (!this.getServer().isSingleplayer() || this.getServer().isPublished()) {
                  int i = this.getGameRules().getInt(GameRules.RULE_PLAYERS_SLEEPING_PERCENTAGE);
@@ -1039,7 +1041,7 @@
                  }
  
              }
-@@ -530,27 +990,29 @@
+@@ -530,27 +992,29 @@
      }
  
      private void advanceWeatherCycle() {
@@ -1078,7 +1080,7 @@
                          j = Mth.randomBetweenInclusive(this.random, 3600, 15600);
                      } else {
                          j = Mth.randomBetweenInclusive(this.random, 12000, 180000);
-@@ -559,9 +1021,9 @@
+@@ -559,9 +1023,9 @@
                      if (k > 0) {
                          --k;
                          if (k == 0) {
@@ -1090,7 +1092,7 @@
                          k = Mth.randomBetweenInclusive(this.random, 12000, 24000);
                      } else {
                          k = Mth.randomBetweenInclusive(this.random, 12000, 180000);
-@@ -571,8 +1033,8 @@
+@@ -571,8 +1035,8 @@
                  this.serverLevelData.setThunderTime(j);
                  this.serverLevelData.setRainTime(k);
                  this.serverLevelData.setClearWeatherTime(i);
@@ -1101,7 +1103,7 @@
              }
  
              this.oThunderLevel = this.thunderLevel;
-@@ -593,32 +1055,66 @@
+@@ -593,32 +1057,66 @@
              this.rainLevel = Mth.clamp(this.rainLevel, 0.0F, 1.0F);
          }
  
@@ -1137,8 +1139,8 @@
 +            if (((ServerPlayer) this.players.get(idx)).level == this) {
 +                ((ServerPlayer) this.players.get(idx)).tickWeather();
 +            }
-+        }
-+
+         }
+ 
 +        if (flag != this.isRaining()) {
 +            // Only send weather packets to those affected
 +            for (int idx = 0; idx < this.players.size(); ++idx) {
@@ -1151,9 +1153,9 @@
 +            if (((ServerPlayer) this.players.get(idx)).level == this) {
 +                ((ServerPlayer) this.players.get(idx)).updateWeather(this.oRainLevel, this.rainLevel, this.oThunderLevel, this.thunderLevel);
 +            }
-         }
++        }
 +        // CraftBukkit end
- 
++
      }
  
      private void resetWeatherCycle() {
@@ -1180,7 +1182,7 @@
      }
  
      public void resetEmptyTime() {
-@@ -626,55 +1122,130 @@
+@@ -626,55 +1124,130 @@
      }
  
      private void tickFluid(BlockPos pos, Fluid fluid) {
@@ -1328,7 +1330,7 @@
              }
          } else {
              passenger.stopRiding();
-@@ -686,9 +1257,48 @@
+@@ -686,9 +1259,48 @@
          return !this.server.isUnderSpawnProtection(this, pos, player) && this.getWorldBorder().isWithinBounds(pos);
      }
  
@@ -1378,7 +1380,7 @@
              if (progressListener != null) {
                  progressListener.progressStartNoAbort(Component.translatable("menu.savingLevel"));
              }
-@@ -698,19 +1308,27 @@
+@@ -698,19 +1310,27 @@
                  progressListener.progressStage(Component.translatable("menu.savingChunks"));
              }
  
@@ -1414,7 +1416,7 @@
          }
  
          this.getChunkSource().getDataStorage().save();
-@@ -718,6 +1336,7 @@
+@@ -718,6 +1338,7 @@
  
      public <T extends Entity> List<? extends T> getEntities(EntityTypeTest<Entity, T> filter, Predicate<? super T> predicate) {
          List<T> list = Lists.newArrayList();
@@ -1422,7 +1424,7 @@
          this.getEntities().get(filter, (entity) -> {
              if (predicate.test(entity)) {
                  list.add(entity);
-@@ -728,15 +1347,18 @@
+@@ -728,15 +1349,18 @@
      }
  
      public List<? extends EnderDragon> getDragons() {
@@ -1445,7 +1447,7 @@
              }
          }
  
-@@ -746,20 +1368,43 @@
+@@ -746,20 +1370,43 @@
      @Nullable
      public ServerPlayer getRandomPlayer() {
          List<ServerPlayer> list = this.getPlayers(LivingEntity::isAlive);
@@ -1493,7 +1495,7 @@
      }
  
      public void addDuringCommandTeleport(ServerPlayer player) {
-@@ -779,35 +1424,96 @@
+@@ -779,35 +1426,96 @@
      }
  
      private void addPlayer(ServerPlayer player) {
@@ -1536,7 +1538,7 @@
 -            LOGGER.warn("Tried to add entity {} but it was marked as removed already", (Object)EntityType.getKey(entity.getType()));
 +            // Paper start
 +            if (DEBUG_ENTITIES) {
-+                new Throwable("Tried to add entity " + entity + " but it was marked as removed already").printStackTrace(); // CraftBukkit
++                io.papermc.paper.util.TraceUtil.dumpTraceForThread("Tried to add entity " + entity + " but it was marked as removed already"); // CraftBukkit
 +                getAddToWorldStackTrace(entity).printStackTrace();
 +            }
 +            // Paper end
@@ -1599,7 +1601,7 @@
          chunk.clearAllBlockEntities();
          chunk.unregisterTickContainerFromLevel(this);
      }
-@@ -816,15 +1522,48 @@
+@@ -816,15 +1524,48 @@
          player.remove(reason);
      }
  
@@ -1655,7 +1657,7 @@
                  }
              }
          }
-@@ -833,12 +1572,12 @@
+@@ -833,12 +1574,12 @@
  
      @Override
      public void playSeededSound(@Nullable Player except, double x, double y, double z, SoundEvent sound, SoundSource category, float volume, float pitch, long seed) {
@@ -1670,7 +1672,7 @@
      }
  
      @Override
-@@ -848,7 +1587,7 @@
+@@ -848,7 +1589,7 @@
  
      @Override
      public void levelEvent(@Nullable Player player, int eventId, BlockPos pos, int data) {
@@ -1679,7 +1681,7 @@
      }
  
      public int getLogicalHeight() {
-@@ -858,23 +1597,32 @@
+@@ -858,23 +1599,32 @@
      @Override
      public void gameEvent(GameEvent event, Vec3 emitterPos, GameEvent.Context emitter) {
          int i = event.getNotificationRadius();
@@ -1728,7 +1730,7 @@
                          });
                      }
                  }
-@@ -885,7 +1633,7 @@
+@@ -885,7 +1635,7 @@
              this.handleGameEventMessagesInQueue(list);
          }
  
@@ -1737,7 +1739,7 @@
              DebugPackets.sendGameEventInfo(this, event, emitterPos);
          }
  
-@@ -894,17 +1642,21 @@
+@@ -894,17 +1644,21 @@
      private void sendGameEvents() {
          if (!this.gameEventMessages.isEmpty()) {
              List<GameEvent.Message> list = this.gameEventMessages;
@@ -1763,7 +1765,7 @@
          }
  
      }
-@@ -912,39 +1664,61 @@
+@@ -912,39 +1666,61 @@
      @Override
      public void sendBlockUpdated(BlockPos pos, BlockState oldState, BlockState newState, int flags) {
          if (this.isUpdatingNavigations) {
@@ -1837,7 +1839,7 @@
      }
  
      @Override
-@@ -974,16 +1748,31 @@
+@@ -974,16 +1750,31 @@
  
      @Override
      public Explosion explode(@Nullable Entity entity, @Nullable DamageSource damageSource, @Nullable ExplosionDamageCalculator behavior, double x, double y, double z, float power, boolean createFire, Explosion.BlockInteraction destructionType) {
@@ -1873,7 +1875,7 @@
              }
          }
  
-@@ -998,14 +1787,15 @@
+@@ -998,14 +1789,15 @@
      private void runBlockEvents() {
          this.blockEventsToReschedule.clear();
  
@@ -1895,7 +1897,7 @@
              }
          }
  
-@@ -1013,8 +1803,9 @@
+@@ -1013,8 +1805,9 @@
      }
  
      private boolean doBlockEvent(BlockEventData event) {
@@ -1907,7 +1909,7 @@
      }
  
      @Override
-@@ -1042,21 +1833,35 @@
+@@ -1042,21 +1835,35 @@
      }
  
      public <T extends ParticleOptions> int sendParticles(T particle, double x, double y, double z, int count, double deltaX, double deltaY, double deltaZ, double speed) {
@@ -1951,7 +1953,7 @@
          return this.sendParticles(viewer, force, x, y, z, packet);
      }
  
-@@ -1064,8 +1869,9 @@
+@@ -1064,8 +1871,9 @@
          if (player.getLevel() != this) {
              return false;
          } else {
@@ -1963,7 +1965,7 @@
                  player.connection.send(packet);
                  return true;
              } else {
-@@ -1077,33 +1883,36 @@
+@@ -1077,33 +1885,36 @@
      @Nullable
      @Override
      public Entity getEntity(int id) {
@@ -2007,7 +2009,7 @@
              }
          }
      }
-@@ -1135,52 +1944,138 @@
+@@ -1135,52 +1946,138 @@
      @Nullable
      @Override
      public MapItemSavedData getMapData(String id) {
@@ -2164,7 +2166,7 @@
      }
  
      @Override
-@@ -1191,19 +2086,26 @@
+@@ -1191,19 +2088,26 @@
      @Override
      public void onBlockStateChange(BlockPos pos, BlockState oldBlock, BlockState newBlock) {
          Optional<Holder<PoiType>> optional = PoiTypes.forState(oldBlock);
@@ -2199,7 +2201,7 @@
                  });
              });
          }
-@@ -1222,11 +2124,7 @@
+@@ -1222,11 +2126,7 @@
      }
  
      public boolean isCloseToVillage(BlockPos pos, int maxDistance) {
@@ -2212,7 +2214,7 @@
      }
  
      public int sectionsToVillage(SectionPos pos) {
-@@ -1251,179 +2149,196 @@
+@@ -1251,179 +2151,196 @@
      }
  
      public void saveDebugReport(Path path) throws IOException {
@@ -2497,7 +2499,7 @@
              this.updateNeighborsAt(pos, block);
          }
  
-@@ -1438,18 +2353,17 @@
+@@ -1438,18 +2355,17 @@
          return this.getEntities().getAll();
      }
  
@@ -2518,7 +2520,7 @@
      }
  
      @Nullable
-@@ -1464,52 +2378,75 @@
+@@ -1464,52 +2380,75 @@
  
      @VisibleForTesting
      public String getWatchdogStats() {
@@ -2614,7 +2616,7 @@
      }
  
      public void startTickingChunk(LevelChunk chunk) {
-@@ -1525,107 +2462,214 @@
+@@ -1525,107 +2464,214 @@
      @Override
      public void close() throws IOException {
          super.close();
@@ -2724,11 +2726,12 @@
              }
  
 -            if (entity instanceof Mob mob) {
+-                if (ServerLevel.this.isUpdatingNavigations) {
+-                    String string = "onTrackingStart called during navigation iteration";
 +            if (entity instanceof Mob) {
 +                Mob entityinsentient = (Mob) entity;
 +
-                 if (ServerLevel.this.isUpdatingNavigations) {
--                    String string = "onTrackingStart called during navigation iteration";
++                if (false && ServerLevel.this.isUpdatingNavigations) { // Paper
 +                    String s = "onTrackingStart called during navigation iteration";
 +
                      Util.logAndPauseIfInIde("onTrackingStart called during navigation iteration", new IllegalStateException("onTrackingStart called during navigation iteration"));
@@ -2818,11 +2821,12 @@
              }
  
 -            if (entity instanceof Mob mob) {
+-                if (ServerLevel.this.isUpdatingNavigations) {
+-                    String string = "onTrackingStart called during navigation iteration";
 +            if (entity instanceof Mob) {
 +                Mob entityinsentient = (Mob) entity;
 +
-                 if (ServerLevel.this.isUpdatingNavigations) {
--                    String string = "onTrackingStart called during navigation iteration";
++                if (false && ServerLevel.this.isUpdatingNavigations) { // Paper
 +                    String s = "onTrackingStart called during navigation iteration";
 +
                      Util.logAndPauseIfInIde("onTrackingStart called during navigation iteration", new IllegalStateException("onTrackingStart called during navigation iteration"));

@@ -76,7 +76,7 @@
 +                    modifier = world.spigotConfig.wheatModifier;
 +                }
 +
-+                if (random.nextInt((int) ((100.0F / modifier) * (25.0F / f)) + 1) == 0) {
++                if (random.nextFloat() < (modifier / (100.0f * (Math.floor((25.0F / f) + 1))))) { // Spigot - SPIGOT-7159: Better modifier resolution
 +                    // Spigot end
 +                    CraftEventFactory.handleBlockGrowEvent(world, pos, this.getStateForAge(i + 1), 2); // CraftBukkit
                  }

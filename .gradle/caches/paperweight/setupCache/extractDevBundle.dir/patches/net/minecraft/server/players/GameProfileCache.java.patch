@@ -411,7 +411,7 @@
 +        // Paper start
 +        };
 +        if (asyncSave) {
-+            net.minecraft.server.MCUtil.scheduleAsyncTask(save);
++            io.papermc.paper.util.MCUtil.scheduleAsyncTask(save);
 +        } else {
 +            save.run();
 +        }

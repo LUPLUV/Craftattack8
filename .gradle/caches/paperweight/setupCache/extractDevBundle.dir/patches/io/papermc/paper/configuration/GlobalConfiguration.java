@@ -141,6 +141,8 @@ public class GlobalConfiguration extends ConfigurationPart {
         public boolean performUsernameValidation = true;
         @Comment("This setting controls if players should be able to create headless pistons.")
         public boolean allowHeadlessPistons = false;
+        @Comment("This setting controls if grindstones should be able to output overstacked items (such as cursed books).")
+        public boolean allowGrindstoneOverstacking = false;
     }
 
     public Commands commands;

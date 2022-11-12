@@ -16,7 +16,7 @@
      private static final Logger LOGGER = LogUtils.getLogger();
      private static final int EVENT_SPAWN = 1;
      public int spawnDelay = 20;
-@@ -40,118 +42,177 @@
+@@ -40,118 +42,178 @@
      public int maxNearbyEntities = 6;
      public int requiredPlayerRange = 16;
      public int spawnRange = 4;
@@ -63,6 +63,7 @@
      }
  
      public void serverTick(ServerLevel world, BlockPos pos) {
++        if (spawnCount <= 0 || maxNearbyEntities <= 0) return; // Paper - Ignore impossible spawn tick
 +        // Paper start - Configurable mob spawner tick rate
 +        if (spawnDelay > 0 && --tickDelay > 0) return;
 +        tickDelay = world.paperConfig().tickRates.mobSpawner;
@@ -139,9 +140,9 @@
 +                        if (type != null) {
 +                            com.destroystokyo.paper.event.entity.PreSpawnerSpawnEvent event;
 +                            event = new com.destroystokyo.paper.event.entity.PreSpawnerSpawnEvent(
-+                                net.minecraft.server.MCUtil.toLocation(world, d0, d1, d2),
++                                io.papermc.paper.util.MCUtil.toLocation(world, d0, d1, d2),
 +                                type,
-+                                net.minecraft.server.MCUtil.toLocation(world, pos)
++                                io.papermc.paper.util.MCUtil.toLocation(world, pos)
 +                            );
 +                            if (!event.callEvent()) {
 +                                flag = true;
@@ -190,9 +191,9 @@
 +                            // Spigot Start
 +                            if (entityinsentient.level.spigotConfig.nerfSpawnerMobs) {
 +                                entityinsentient.aware = false;
-+                            }
+                             }
 +                            // Spigot End
-+                        }
+                         }
 +                        entity.spawnedViaMobSpawner = true; // Paper
 +                        entity.spawnReason = org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.SPAWNER; // Paper
 +                        flag = true; // Paper
@@ -201,12 +202,12 @@
 +                            Entity vehicle = entity.getVehicle();
 +                            if (vehicle != null) {
 +                                vehicle.discard();
-                             }
++                            }
 +                            for (Entity passenger : entity.getIndirectPassengers()) {
 +                                passenger.discard();
 +                            }
 +                            continue;
-                         }
++                        }
 +                        // Spigot End
  
 -                        if (!world.tryAddFreshEntityWithPassengers(entity)) {
@@ -233,7 +234,7 @@
                      this.delay(world, pos);
                  }
  
-@@ -160,55 +221,72 @@
+@@ -160,55 +222,72 @@
      }
  
      public void delay(Level world, BlockPos pos) {
@@ -331,7 +332,7 @@
              this.spawnCount = nbt.getShort("SpawnCount");
          }
  
-@@ -225,17 +303,28 @@
+@@ -225,17 +304,28 @@
      }
  
      public CompoundTag save(CompoundTag nbt) {
@@ -369,7 +370,7 @@
          return nbt;
      }
  
-@@ -244,6 +333,7 @@
+@@ -244,6 +334,7 @@
          if (this.displayEntity == null) {
              this.displayEntity = EntityType.loadEntityRecursive(this.nextSpawnData.getEntityToSpawn(), world, Function.identity());
              if (this.nextSpawnData.getEntityToSpawn().size() == 1 && this.nextSpawnData.getEntityToSpawn().contains("id", 8) && this.displayEntity instanceof Mob) {

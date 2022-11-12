@@ -53,7 +53,7 @@
      private static final Logger LOGGER = LogUtils.getLogger();
      public static final Codec<ChunkGenerator> CODEC = Registry.CHUNK_GENERATOR.byNameCodec().dispatchStable(ChunkGenerator::codec, Function.identity());
      public final Registry<StructureSet> structureSets;
-@@ -91,104 +95,191 @@
+@@ -91,104 +95,196 @@
      private final Supplier<List<FeatureSorter.StepFeatureData>> featuresPerStep;
      public final Optional<HolderSet<StructureSet>> structureOverrides;
      private final Function<Holder<Biome>, BiomeGenerationSettings> generationSettingsGetter;
@@ -100,12 +100,12 @@
      public Stream<Holder<StructureSet>> possibleStructureSets() {
 -        return this.structureOverrides.isPresent() ? this.structureOverrides.get().stream() : this.structureSets.holders().map(Holder::hackyErase);
 +        return this.structureOverrides.isPresent() ? ((HolderSet) this.structureOverrides.get()).stream() : this.structureSets.holders().map(Holder::hackyErase);
-     }
- 
++    }
++
 +    // Spigot start
 +    private Stream<StructureSet> possibleStructureSetsSpigot() {
 +        return this.possibleStructureSets().map(Holder::value).map((structureset) -> {
-+            if (structureset.placement() instanceof RandomSpreadStructurePlacement randomConfig) {
++            if (structureset.placement() instanceof RandomSpreadStructurePlacement randomConfig && this.structureSets.getKey(structureset).getNamespace().equals(net.minecraft.resources.ResourceLocation.DEFAULT_NAMESPACE)) { // Paper - check namespace cause datapacks could add structure sets with the same path
 +                String name = this.structureSets.getKey(structureset).getPath();
 +                int seed = randomConfig.salt;
 +
@@ -152,15 +152,20 @@
 +                    case "villages":
 +                        seed = conf.villageSeed;
 +                        break;
++                        // Paper start
++                    case "ancient_cities":
++                        seed = conf.ancientCitySeed;
++                        break;
++                        // Paper end
 +                }
 +
 +                structureset = new StructureSet(structureset.structures(), new RandomSpreadStructurePlacement(randomConfig.locateOffset, randomConfig.frequencyReductionMethod, randomConfig.frequency, seed, randomConfig.exclusionZone, randomConfig.spacing(), randomConfig.separation(), randomConfig.spreadType()));
 +            }
 +            return structureset;
 +        });
-+    }
+     }
 +    // Spigot end
-+
+ 
      private void generatePositions(RandomState noiseConfig) {
          Set<Holder<Biome>> set = this.biomeSource.possibleBiomes();
 -        this.possibleStructureSets().forEach((structureSet) -> {
@@ -296,7 +301,7 @@
              return list;
          }), Util.backgroundExecutor());
      }
-@@ -203,20 +294,46 @@
+@@ -203,20 +299,46 @@
          return CompletableFuture.supplyAsync(Util.wrapThreadWithTaskName("init_biomes", () -> {
              chunk.fillBiomesFromNoise(this.biomeSource, noiseConfig.sampler());
              return chunk;
@@ -311,7 +316,7 @@
 -        Map<StructurePlacement, Set<Holder<Structure>>> map = new Object2ObjectArrayMap<>();
 +        // Paper start - StructureLocateEvent
 +        final org.bukkit.World bukkitWorld = world.getWorld();
-+        final org.bukkit.Location origin = net.minecraft.server.MCUtil.toLocation(world, center);
++        final org.bukkit.Location origin = io.papermc.paper.util.MCUtil.toLocation(world, center);
 +        final var paperRegistry = io.papermc.paper.registry.PaperRegistry.getRegistry(io.papermc.paper.registry.RegistryKey.CONFIGURED_STRUCTURE_REGISTRY);
 +        final List<io.papermc.paper.world.structure.ConfiguredStructure> configuredStructures = new ArrayList<>();
 +        paperRegistry.convertToApi(structures, configuredStructures::add, false); // gracefully handle missing api, use tests to check (or exclude)
@@ -321,9 +326,9 @@
 +                return null;
 +            }
 +            if (event.getResult() != null) {
-+                return Pair.of(net.minecraft.server.MCUtil.toBlockPosition(event.getResult().position()), paperRegistry.getMinecraftHolder(event.getResult().configuredStructure()));
++                return Pair.of(io.papermc.paper.util.MCUtil.toBlockPosition(event.getResult().position()), paperRegistry.getMinecraftHolder(event.getResult().configuredStructure()));
 +            }
-+            center = net.minecraft.server.MCUtil.toBlockPosition(event.getOrigin());
++            center = io.papermc.paper.util.MCUtil.toBlockPosition(event.getOrigin());
 +            radius = event.getRadius();
 +            skipReferencedStructures = event.shouldFindUnexplored();
 +            structures = HolderSet.direct(paperRegistry::getMinecraftHolder, event.getConfiguredStructures());
@@ -349,7 +354,7 @@
              }
          }
  
-@@ -224,49 +341,58 @@
+@@ -224,49 +346,58 @@
              return null;
          } else {
              Pair<BlockPos, Holder<Structure>> pair = null;
@@ -437,7 +442,7 @@
                          return pair;
                      }
                  }
-@@ -279,22 +405,29 @@
+@@ -279,22 +410,29 @@
      @Nullable
      private Pair<BlockPos, Holder<Structure>> getNearestGeneratedStructure(Set<Holder<Structure>> structures, ServerLevel world, StructureManager structureAccessor, BlockPos center, boolean skipReferencedStructures, ConcentricRingsStructurePlacement placement) {
          List<ChunkPos> list = this.getRingPositionsFor(placement, world.getChunkSource().randomState());
@@ -478,7 +483,7 @@
                      }
                  }
              }
-@@ -305,18 +438,20 @@
+@@ -305,18 +443,20 @@
  
      @Nullable
      private static Pair<BlockPos, Holder<Structure>> getNearestGeneratedStructure(Set<Holder<Structure>> structures, LevelReader world, StructureManager structureAccessor, int centerChunkX, int centerChunkZ, int radius, boolean skipReferencedStructures, long seed, RandomSpreadStructurePlacement placement) {
@@ -509,7 +514,7 @@
                      if (pair != null) {
                          return pair;
                      }
-@@ -329,22 +464,37 @@
+@@ -329,22 +469,37 @@
  
      @Nullable
      private static Pair<BlockPos, Holder<Structure>> getStructureGeneratingAt(Set<Holder<Structure>> structures, LevelReader world, StructureManager structureAccessor, boolean skipReferencedStructures, StructurePlacement placement, ChunkPos pos) {
@@ -561,7 +566,7 @@
      }
  
      private static boolean tryAddReference(StructureManager structureAccessor, StructureStart start) {
-@@ -356,116 +506,184 @@
+@@ -356,116 +511,184 @@
          }
      }
  
@@ -813,11 +818,11 @@
 -                    if (structurePlacement.isStructureChunk(this, noiseConfig, seed, i, j)) {
 +            for (int i1 = chunkX - chunkRange; i1 <= chunkX + chunkRange; ++i1) {
 +                for (int j1 = chunkZ - chunkRange; j1 <= chunkZ + chunkRange; ++j1) {
-+                    if (structureplacement.isStructureChunk(this, noiseConfig, seed, i1, j1)) {
++                    if (structureplacement.isStructureChunk(this, noiseConfig, seed, i1, j1, structureSet.unwrapKey().map(ResourceKey::location).orElse(null))) { // Paper
                          return true;
                      }
                  }
-@@ -476,12 +694,13 @@
+@@ -476,12 +699,13 @@
      }
  
      private static BoundingBox getWritableArea(ChunkAccess chunk) {
@@ -837,7 +842,7 @@
          return new BoundingBox(i, k, j, i + 15, l, j + 15);
      }
  
-@@ -501,80 +720,100 @@
+@@ -501,80 +725,100 @@
  
      public WeightedRandomList<MobSpawnSettings.SpawnerData> getMobsAt(Holder<Biome> biome, StructureManager accessor, MobCategory group, BlockPos pos) {
          Map<Structure, LongSet> map = accessor.getAllStructuresAt(pos);
@@ -915,7 +920,7 @@
              }
  
 -            if (structurePlacement.isStructureChunk(this, noiseConfig, seed, chunkPos.x, chunkPos.z)) {
-+            if (structureplacement.isStructureChunk(this, noiseConfig, seed, chunkcoordintpair.x, chunkcoordintpair.z)) {
++            if (structureplacement.isStructureChunk(this, noiseConfig, seed, chunkcoordintpair.x, chunkcoordintpair.z, this.structureSets.getResourceKey(holder).map(ResourceKey::location).orElse(null))) { // Paper
                  if (list.size() == 1) {
 -                    this.tryGenerateStructure(list.get(0), structureAccessor, registryManager, noiseConfig, structureTemplateManager, seed, chunk, chunkPos, sectionPos);
 +                    this.tryGenerateStructure((StructureSet.StructureSelectionEntry) list.get(0), structureAccessor, registryManager, noiseConfig, structureTemplateManager, seed, chunk, chunkcoordintpair, sectionposition);
@@ -985,7 +990,7 @@
                      }
  
                  }
-@@ -583,13 +822,16 @@
+@@ -583,13 +827,16 @@
      }
  
      private boolean tryGenerateStructure(StructureSet.StructureSelectionEntry weightedEntry, StructureManager structureAccessor, RegistryAccess dynamicRegistryManager, RandomState noiseConfig, StructureTemplateManager structureManager, long seed, ChunkAccess chunk, ChunkPos pos, SectionPos sectionPos) {
@@ -1009,7 +1014,7 @@
              return true;
          } else {
              return false;
-@@ -597,45 +839,50 @@
+@@ -597,45 +844,50 @@
      }
  
      private static int fetchReferences(StructureManager structureAccessor, ChunkAccess chunk, SectionPos sectionPos, Structure structure) {
@@ -1087,7 +1092,7 @@
                      }
                  }
              }
-@@ -651,7 +898,7 @@
+@@ -651,7 +903,7 @@
  
      public abstract int getBaseHeight(int x, int z, Heightmap.Types heightmap, LevelHeightAccessor world, RandomState noiseConfig);
  
@@ -1096,7 +1101,7 @@
  
      public int getFirstFreeHeight(int x, int z, Heightmap.Types heightmap, LevelHeightAccessor world, RandomState noiseConfig) {
          return this.getBaseHeight(x, z, heightmap, world, noiseConfig);
-@@ -672,13 +919,14 @@
+@@ -672,13 +924,14 @@
      @Nullable
      public List<ChunkPos> getRingPositionsFor(ConcentricRingsStructurePlacement structurePlacement, RandomState noiseConfig) {
          this.ensureStructuresGenerated(noiseConfig);
@@ -1114,7 +1119,7 @@
      }
  
      public abstract void addDebugScreenInfo(List<String> text, RandomState noiseConfig, BlockPos pos);
-@@ -686,6 +934,6 @@
+@@ -686,6 +939,6 @@
      /** @deprecated */
      @Deprecated
      public BiomeGenerationSettings getBiomeGenerationSettings(Holder<Biome> biomeEntry) {

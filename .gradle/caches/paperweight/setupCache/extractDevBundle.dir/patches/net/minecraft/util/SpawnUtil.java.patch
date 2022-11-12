@@ -39,7 +39,7 @@
 +
 +                com.destroystokyo.paper.event.entity.PreCreatureSpawnEvent event;
 +                event = new com.destroystokyo.paper.event.entity.PreCreatureSpawnEvent(
-+                    net.minecraft.server.MCUtil.toLocation(worldserver, blockposition),
++                    io.papermc.paper.util.MCUtil.toLocation(worldserver, blockposition),
 +                    type,
 +                    reason
 +                );

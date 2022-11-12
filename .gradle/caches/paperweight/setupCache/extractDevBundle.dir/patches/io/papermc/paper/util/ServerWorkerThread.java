@@ -1,4 +1,4 @@
-package net.minecraft.server;
+package io.papermc.paper.util;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.Util;

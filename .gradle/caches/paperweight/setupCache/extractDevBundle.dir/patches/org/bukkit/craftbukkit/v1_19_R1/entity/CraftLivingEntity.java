@@ -207,22 +207,22 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
     // Paper start
     @Override
     public Block getTargetBlock(int maxDistance, com.destroystokyo.paper.block.TargetBlockInfo.FluidMode fluidMode) {
-        net.minecraft.world.phys.HitResult rayTrace = getHandle().getRayTrace(maxDistance, net.minecraft.server.MCUtil.getNMSFluidCollisionOption(fluidMode));
+        net.minecraft.world.phys.HitResult rayTrace = getHandle().getRayTrace(maxDistance, io.papermc.paper.util.MCUtil.getNMSFluidCollisionOption(fluidMode));
         return !(rayTrace instanceof net.minecraft.world.phys.BlockHitResult) ? null : org.bukkit.craftbukkit.v1_19_R1.block.CraftBlock.at(getHandle().level, ((net.minecraft.world.phys.BlockHitResult)rayTrace).getBlockPos());
     }
 
     @Override
     public org.bukkit.block.BlockFace getTargetBlockFace(int maxDistance, com.destroystokyo.paper.block.TargetBlockInfo.FluidMode fluidMode) {
-        net.minecraft.world.phys.HitResult rayTrace = getHandle().getRayTrace(maxDistance, net.minecraft.server.MCUtil.getNMSFluidCollisionOption(fluidMode));
-        return !(rayTrace instanceof net.minecraft.world.phys.BlockHitResult) ? null : net.minecraft.server.MCUtil.toBukkitBlockFace(((net.minecraft.world.phys.BlockHitResult)rayTrace).getDirection());
+        net.minecraft.world.phys.HitResult rayTrace = getHandle().getRayTrace(maxDistance, io.papermc.paper.util.MCUtil.getNMSFluidCollisionOption(fluidMode));
+        return !(rayTrace instanceof net.minecraft.world.phys.BlockHitResult) ? null : io.papermc.paper.util.MCUtil.toBukkitBlockFace(((net.minecraft.world.phys.BlockHitResult)rayTrace).getDirection());
     }
 
     @Override
     public com.destroystokyo.paper.block.TargetBlockInfo getTargetBlockInfo(int maxDistance, com.destroystokyo.paper.block.TargetBlockInfo.FluidMode fluidMode) {
-        net.minecraft.world.phys.HitResult rayTrace = getHandle().getRayTrace(maxDistance, net.minecraft.server.MCUtil.getNMSFluidCollisionOption(fluidMode));
+        net.minecraft.world.phys.HitResult rayTrace = getHandle().getRayTrace(maxDistance, io.papermc.paper.util.MCUtil.getNMSFluidCollisionOption(fluidMode));
         return !(rayTrace instanceof net.minecraft.world.phys.BlockHitResult) ? null :
             new com.destroystokyo.paper.block.TargetBlockInfo(org.bukkit.craftbukkit.v1_19_R1.block.CraftBlock.at(getHandle().level, ((net.minecraft.world.phys.BlockHitResult)rayTrace).getBlockPos()),
-                net.minecraft.server.MCUtil.toBukkitBlockFace(((net.minecraft.world.phys.BlockHitResult)rayTrace).getDirection()));
+                io.papermc.paper.util.MCUtil.toBukkitBlockFace(((net.minecraft.world.phys.BlockHitResult)rayTrace).getDirection()));
     }
 
     public Entity getTargetEntity(int maxDistance, boolean ignoreBlocks) {
@@ -977,5 +977,11 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
         }
         throw new IllegalArgumentException(entityCategory + " is an unrecognized entity category");
     }
+
+    @Override
+    public void knockback(double strength, double directionX, double directionZ) {
+        Preconditions.checkArgument(strength > 0, "Knockback strength must be > 0");
+        getHandle().knockback(strength, directionX, directionZ);
+    };
     // Paper end
 }

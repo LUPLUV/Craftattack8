@@ -98,7 +98,7 @@
 -        if (state.getValue(STAGE) == 0) {
 -            if (random.nextInt(3) == 0 && world.isEmptyBlock(pos.above()) && world.getRawBrightness(pos.above(), 0) >= 9) {
 +        if ((Integer) state.getValue(BambooBlock.STAGE) == 0) {
-+            if (random.nextInt(Math.max(1, (int) (100.0F / world.spigotConfig.bambooModifier) * 3)) == 0 && world.isEmptyBlock(pos.above()) && world.getRawBrightness(pos.above(), 0) >= 9) { // Spigot
++            if (random.nextFloat() < (world.spigotConfig.bambooModifier / (100.0f * 3)) && world.isEmptyBlock(pos.above()) && world.getRawBrightness(pos.above(), 0) >= 9) { // Spigot - SPIGOT-7159: Better modifier resolution
                  int i = this.getHeightBelowUpToMax(world, pos) + 1;
 -                if (i < 16) {
 +

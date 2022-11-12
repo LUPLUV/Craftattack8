@@ -1,4 +1,4 @@
-package net.minecraft.server;
+package io.papermc.paper.chunk.system;
 
 import ca.spottedleaf.concurrentutil.executor.standard.PrioritisedExecutor;
 import com.destroystokyo.paper.util.SneakyThrow;

@@ -47,11 +47,11 @@ public class CraftDolphin extends CraftWaterMob implements Dolphin {
 
     @Override
     public org.bukkit.Location getTreasureLocation() {
-        return net.minecraft.server.MCUtil.toLocation(this.getHandle().level, this.getHandle().getTreasurePos());
+        return io.papermc.paper.util.MCUtil.toLocation(this.getHandle().level, this.getHandle().getTreasurePos());
     }
 
     @Override
     public void setTreasureLocation(org.bukkit.Location location) {
-        this.getHandle().setTreasurePos(net.minecraft.server.MCUtil.toBlockPosition(location));
+        this.getHandle().setTreasurePos(io.papermc.paper.util.MCUtil.toBlockPosition(location));
     }
 }

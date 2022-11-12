@@ -103,12 +103,10 @@ public class SpigotWorldConfig
     public int bambooModifier;
     public int sweetBerryModifier;
     public int kelpModifier;
-    // Paper start
     public int twistingVinesModifier;
     public int weepingVinesModifier;
     public int caveVinesModifier;
-    public int glowBerryModifier;
-    // Paper end
+    public int glowBerryModifier; // Paper
     private int getAndValidateGrowth(String crop)
     {
         int modifier = this.getInt( "growth." + crop.toLowerCase(java.util.Locale.ENGLISH) + "-modifier", 100 );
@@ -139,12 +137,10 @@ public class SpigotWorldConfig
         this.bambooModifier = this.getAndValidateGrowth( "Bamboo" );
         this.sweetBerryModifier = this.getAndValidateGrowth( "SweetBerry" );
         this.kelpModifier = this.getAndValidateGrowth( "Kelp" );
-        // Paper start
-        this.twistingVinesModifier = this.getAndValidateGrowth("TwistingVines");
-        this.weepingVinesModifier = this.getAndValidateGrowth("WeepingVines");
-        this.caveVinesModifier = this.getAndValidateGrowth("CaveVines");
-        this.glowBerryModifier = this.getAndValidateGrowth("GlowBerry");
-        // Paper end
+        this.twistingVinesModifier = this.getAndValidateGrowth( "TwistingVines" );
+        this.weepingVinesModifier = this.getAndValidateGrowth( "WeepingVines" );
+        this.caveVinesModifier = this.getAndValidateGrowth( "CaveVines" );
+        this.glowBerryModifier = this.getAndValidateGrowth("GlowBerry"); // Paper
     }
 
     public double itemMerge;
@@ -366,7 +362,16 @@ public class SpigotWorldConfig
     public int mansionSeed;
     public int fossilSeed;
     public int portalSeed;
-    public Long strongholdSeed; // Paper
+    // Paper start - add missing structure set configs
+    public int ancientCitySeed;
+    public int buriedTreasureSeed;
+    public Integer mineshaftSeed;
+    public Long strongholdSeed;
+    private <N extends Number> N getSeed(String path, java.util.function.Function<String, N> toNumberFunc) {
+        final String value = this.getString(path, "default");
+        return org.apache.commons.lang3.math.NumberUtils.isParsable(value) ? toNumberFunc.apply(value) : null;
+    }
+    // Paper end
     private void initWorldGenSeeds()
     {
         this.villageSeed = this.getInt( "seed-village", 10387312 );
@@ -384,9 +389,11 @@ public class SpigotWorldConfig
         this.mansionSeed = this.getInt( "seed-mansion", 10387319 );
         this.fossilSeed = this.getInt( "seed-fossil", 14357921 );
         this.portalSeed = this.getInt( "seed-portal", 34222645 );
-        // Paper start
-        final String strongholdSeedString = this.getString("seed-stronghold", "default");
-        this.strongholdSeed = org.apache.commons.lang3.math.NumberUtils.isParsable(strongholdSeedString) ? Long.parseLong(strongholdSeedString) : null;
+        // Paper start - add missing structure set configs
+        this.ancientCitySeed = this.getInt("seed-ancientcity", 20083232);
+        this.buriedTreasureSeed = this.getInt("seed-buriedtreasure", 10387320); // StructurePlacement#HIGHLY_ARBITRARY_RANDOM_SALT
+        this.mineshaftSeed = this.getSeed("seed-mineshaft", Integer::parseInt);
+        this.strongholdSeed = this.getSeed("seed-stronghold", Long::parseLong);
         // Paper end
         this.log( "Custom Map Seeds:  Village: " + this.villageSeed + " Desert: " + this.desertSeed + " Igloo: " + this.iglooSeed + " Jungle: " + this.jungleSeed + " Swamp: " + this.swampSeed + " Monument: " + this.monumentSeed
                 + " Ocean: " + this.oceanSeed + " Shipwreck: " + this.shipwreckSeed + " End City: " + this.endCitySeed + " Slime: " + this.slimeSeed + " Nether: " + this.netherSeed + " Mansion: " + this.mansionSeed + " Fossil: " + this.fossilSeed + " Portal: " + this.portalSeed );

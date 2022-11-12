@@ -623,18 +623,22 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
 
     @Override
     public <T> T getClientOption(com.destroystokyo.paper.ClientOption<T> type) {
-        if(com.destroystokyo.paper.ClientOption.SKIN_PARTS.equals(type)) {
+        if (com.destroystokyo.paper.ClientOption.SKIN_PARTS == type) {
             return type.getType().cast(new com.destroystokyo.paper.PaperSkinParts(getHandle().getEntityData().get(net.minecraft.world.entity.player.Player.DATA_PLAYER_MODE_CUSTOMISATION)));
-        } else if(com.destroystokyo.paper.ClientOption.CHAT_COLORS_ENABLED.equals(type)) {
+        } else if (com.destroystokyo.paper.ClientOption.CHAT_COLORS_ENABLED == type) {
             return type.getType().cast(getHandle().canChatInColor());
-        } else if(com.destroystokyo.paper.ClientOption.CHAT_VISIBILITY.equals(type)) {
+        } else if (com.destroystokyo.paper.ClientOption.CHAT_VISIBILITY == type) {
             return type.getType().cast(getHandle().getChatVisibility() == null ? com.destroystokyo.paper.ClientOption.ChatVisibility.UNKNOWN : com.destroystokyo.paper.ClientOption.ChatVisibility.valueOf(getHandle().getChatVisibility().name()));
-        } else if(com.destroystokyo.paper.ClientOption.LOCALE.equals(type)) {
+        } else if (com.destroystokyo.paper.ClientOption.LOCALE == type) {
             return type.getType().cast(getLocale());
-        } else if(com.destroystokyo.paper.ClientOption.MAIN_HAND.equals(type)) {
+        } else if (com.destroystokyo.paper.ClientOption.MAIN_HAND == type) {
             return type.getType().cast(getMainHand());
-        } else if(com.destroystokyo.paper.ClientOption.VIEW_DISTANCE.equals(type)) {
+        } else if (com.destroystokyo.paper.ClientOption.VIEW_DISTANCE == type) {
             return type.getType().cast(getClientViewDistance());
+        } else if (com.destroystokyo.paper.ClientOption.ALLOW_SERVER_LISTINGS == type) {
+            return type.getType().cast(getHandle().allowsListing());
+        } else if (com.destroystokyo.paper.ClientOption.TEXT_FILTERING_ENABLED == type) {
+            return type.getType().cast(getHandle().isTextFilteringEnabled());
         }
         throw new RuntimeException("Unknown settings type");
     }
@@ -2929,6 +2933,13 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     @Override
     public String getClientBrandName() {
         return getHandle().connection != null ? getHandle().connection.getClientBrandName() : null;
+    }
+    // Paper end
+
+    // Paper start
+    @Override
+    public void showElderGuardian(boolean silent) {
+        if (getHandle().connection != null) getHandle().connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.GUARDIAN_ELDER_EFFECT, silent ? 0F : 1F));
     }
     // Paper end
 

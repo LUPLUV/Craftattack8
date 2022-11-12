@@ -156,7 +156,7 @@
      }
  
      private static boolean isBabyRidingBaby(Piglin piglin) {
-@@ -204,38 +221,45 @@
+@@ -204,139 +221,167 @@
              return false;
          } else {
              Entity entity = piglin.getVehicle();
@@ -174,7 +174,10 @@
 +        ItemStack itemstack;
 +
 +        // CraftBukkit start
-+        if (drop.getItem().is(Items.GOLD_NUGGET) && !org.bukkit.craftbukkit.v1_19_R1.event.CraftEventFactory.callEntityPickupItemEvent(piglin, drop, 0, false).isCancelled()) {
++        // Paper start - fix event firing twice
++        if (drop.getItem().is(Items.GOLD_NUGGET) /* && !org.bukkit.craftbukkit.v1_19_R1.event.CraftEventFactory.callEntityPickupItemEvent(piglin, drop, 0, false).isCancelled() */) {
++            if (org.bukkit.craftbukkit.v1_19_R1.event.CraftEventFactory.callEntityPickupItemEvent(piglin, drop, 0, false).isCancelled()) return;
++            // Paper end
              piglin.take(drop, drop.getItem().getCount());
 -            itemStack = drop.getItem();
 +            itemstack = drop.getItem();
@@ -187,6 +190,7 @@
 +        } else {
 +            return;
          }
++        piglin.onItemPickup(drop); // Paper - moved from Piglin#pickUpItem
 +        // CraftBukkit end
  
 -        if (isLovedItem(itemStack)) {
@@ -215,10 +219,12 @@
      private static void holdInOffhand(Piglin piglin, ItemStack stack) {
 -        if (isHoldingItemInOffHand(piglin)) {
 +        if (PiglinAi.isHoldingItemInOffHand(piglin)) {
++            piglin.forceDrops = true; // Paper
              piglin.spawnAtLocation(piglin.getItemInHand(InteractionHand.OFF_HAND));
++            piglin.forceDrops = false; // Paper
          }
  
-@@ -243,48 +267,59 @@
+         piglin.holdInOffHand(stack);
      }
  
      private static ItemStack removeOneItemFromItemEntity(ItemEntity stack) {
@@ -296,10 +302,12 @@
      protected static void cancelAdmiring(Piglin piglin) {
 -        if (isAdmiringItem(piglin) && !piglin.getOffhandItem().isEmpty()) {
 +        if (PiglinAi.isAdmiringItem(piglin) && !piglin.getOffhandItem().isEmpty()) {
++            piglin.forceDrops = true; // Paper
              piglin.spawnAtLocation(piglin.getOffhandItem());
++            piglin.forceDrops = false; // Paper
              piglin.setItemInHand(InteractionHand.OFF_HAND, ItemStack.EMPTY);
          }
-@@ -292,51 +327,53 @@
+ 
      }
  
      private static void putInInventory(Piglin piglin, ItemStack stack) {
@@ -368,7 +376,7 @@
      }
  
      protected static boolean wantsToPickup(Piglin piglin, ItemStack stack) {
-@@ -344,100 +381,112 @@
+@@ -344,100 +389,112 @@
              return false;
          } else if (stack.is(ItemTags.PIGLIN_REPELLENTS)) {
              return false;
@@ -392,7 +400,7 @@
 -            }
 +            boolean flag = piglin.canAddToInventory(stack);
 +
-+            return stack.is(Items.GOLD_NUGGET) ? flag : (PiglinAi.isFood(stack) ? !PiglinAi.hasEatenRecently(piglin) && flag : (!PiglinAi.isLovedItem(stack) ? piglin.canReplaceCurrentItem(stack) : PiglinAi.isNotHoldingLovedItemInOffHand(piglin) && flag));
++            return stack.is(Items.GOLD_NUGGET) ? flag : (PiglinAi.isFood(stack) ? !PiglinAi.hasEatenRecently(piglin) && flag : (!PiglinAi.isLovedItem(stack, piglin) ? piglin.canReplaceCurrentItem(stack) : PiglinAi.isNotHoldingLovedItemInOffHand(piglin) && flag)); // Paper - upstream missed isLovedItem check
          }
      }
  
@@ -526,7 +534,7 @@
              return InteractionResult.CONSUME;
          } else {
              return InteractionResult.PASS;
-@@ -445,40 +494,41 @@
+@@ -445,40 +502,41 @@
      }
  
      protected static boolean canAdmire(Piglin piglin, ItemStack nearbyItems) {
@@ -585,7 +593,7 @@
              }
          }
      }
-@@ -488,11 +538,11 @@
+@@ -488,11 +546,11 @@
              if (Sensor.isEntityAttackableIgnoringLineOfSight(piglin, target)) {
                  if (!BehaviorUtils.isOtherTargetMuchFurtherAwayThanCurrentAttackTarget(piglin, target, 4.0D)) {
                      if (target.getType() == EntityType.PLAYER && piglin.level.getGameRules().getBoolean(GameRules.RULE_UNIVERSAL_ANGER)) {
@@ -601,7 +609,7 @@
                      }
  
                  }
-@@ -502,56 +552,51 @@
+@@ -502,56 +560,51 @@
  
      public static Optional<SoundEvent> getSoundForCurrentActivity(Piglin piglin) {
          return piglin.getBrain().getActiveNonCoreActivity().map((activity) -> {
@@ -681,7 +689,7 @@
      }
  
      private static void stopWalking(Piglin piglin) {
-@@ -560,27 +605,27 @@
+@@ -560,27 +613,27 @@
      }
  
      private static RunSometimes<Piglin> babySometimesRideBabyHoglin() {
@@ -717,7 +725,7 @@
      }
  
      protected static void setAngerTarget(AbstractPiglin piglin, LivingEntity target) {
-@@ -588,7 +633,7 @@
+@@ -588,7 +641,7 @@
              piglin.getBrain().eraseMemory(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
              piglin.getBrain().setMemoryWithExpiry(MemoryModuleType.ANGRY_AT, target.getUUID(), 600L);
              if (target.getType() == EntityType.HOGLIN && piglin.canHunt()) {
@@ -726,7 +734,7 @@
              }
  
              if (target.getType() == EntityType.PLAYER && piglin.level.getGameRules().getBoolean(GameRules.RULE_UNIVERSAL_ANGER)) {
-@@ -599,20 +644,22 @@
+@@ -599,20 +652,22 @@
      }
  
      private static void setAngerTargetToNearestTargetablePlayerIfFound(AbstractPiglin piglin, LivingEntity player) {
@@ -756,7 +764,7 @@
          }
      }
  
-@@ -629,44 +676,42 @@
+@@ -629,44 +684,42 @@
      }
  
      private static void broadcastRetreat(Piglin piglin, LivingEntity target) {
@@ -821,7 +829,7 @@
          return j > i;
      }
  
-@@ -674,12 +719,12 @@
+@@ -674,12 +727,12 @@
          piglin.getBrain().eraseMemory(MemoryModuleType.ANGRY_AT);
          piglin.getBrain().eraseMemory(MemoryModuleType.ATTACK_TARGET);
          piglin.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
@@ -837,7 +845,7 @@
      }
  
      private static boolean seesPlayerHoldingWantedItem(Piglin piglin) {
-@@ -691,8 +736,9 @@
+@@ -691,8 +744,9 @@
      }
  
      private static Vec3 getRandomNearbyPos(Piglin piglin) {
@@ -849,7 +857,7 @@
      }
  
      private static boolean hasEatenRecently(Piglin piglin) {
-@@ -715,8 +761,14 @@
+@@ -715,8 +769,14 @@
          return entity.getBrain().hasMemoryValue(MemoryModuleType.ADMIRING_ITEM);
      }
  
@@ -865,7 +873,7 @@
      }
  
      private static boolean isFood(ItemStack stack) {
-@@ -732,7 +784,7 @@
+@@ -732,7 +792,7 @@
      }
  
      private static boolean doesntSeeAnyPlayerHoldingLovedItem(LivingEntity piglin) {
@@ -874,7 +882,7 @@
      }
  
      public static boolean isPlayerHoldingLovedItem(LivingEntity target) {
-@@ -752,7 +804,7 @@
+@@ -752,7 +812,7 @@
      }
  
      private static boolean isNotHoldingLovedItemInOffHand(Piglin piglin) {

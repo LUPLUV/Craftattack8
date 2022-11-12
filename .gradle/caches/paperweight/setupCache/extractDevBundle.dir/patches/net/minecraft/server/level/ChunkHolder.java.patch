@@ -68,7 +68,7 @@
 +    // Paper start
 +    public void onChunkAdd() {
 +        // Paper start - optimise anyPlayerCloseEnoughForSpawning
-+        long key = net.minecraft.server.MCUtil.getCoordinateKey(this.pos);
++        long key = io.papermc.paper.util.MCUtil.getCoordinateKey(this.pos);
 +        this.playersInMobSpawnRange = this.chunkMap.playerMobSpawnMap.getObjectsInRange(key);
 +        this.playersInChunkTickRange = this.chunkMap.playerChunkTickRangeMap.getObjectsInRange(key);
 +        // Paper end - optimise anyPlayerCloseEnoughForSpawning
@@ -131,8 +131,8 @@
 +        // Paper - rewrite chunk system
          this.changedBlocksPerSection = new ShortSet[world.getSectionsCount()];
 +        this.chunkMap = (ChunkMap)playersWatchingChunkProvider; // Paper
-+    }
-+
+     }
+ 
 +    // Paper start
 +    public @Nullable ChunkAccess getAvailableChunkNow() {
 +        return this.newChunkHolder.getCurrentChunk(); // Paper - rewrite chunk system
@@ -145,8 +145,8 @@
 +        if (!this.isFullChunkReady() || !(chunk instanceof LevelChunk)) return null; // instanceof to avoid a race condition on off-main threads
 +        return (LevelChunk)chunk;
 +        // Paper end - rewrite chunk system
-     }
- 
++    }
++
 +    public LevelChunk getFullChunkNowUnchecked() {
 +        // Paper start - rewrite chunk system
 +        ChunkAccess chunk = this.getAvailableChunkNow();
@@ -401,7 +401,7 @@
              if (packet != null) {
                  this.broadcast(packet, false);
              }
-@@ -249,228 +352,77 @@
+@@ -249,228 +352,75 @@
      }
  
      public void broadcast(Packet<?> packet, boolean onlyOnWatchDistanceEdge) {
@@ -428,14 +428,12 @@
 -                throw chunkStorage.debugFuturesAndCreateReportedException(new IllegalStateException("null value previously set for chunk status"), string);
 +        Object[] backingSet = players.getBackingSet();
 +        for (int i = 0, len = backingSet.length; i < len; ++i) {
-+            Object temp = backingSet[i];
-+            if (!(temp instanceof ServerPlayer)) {
++            if (!(backingSet[i] instanceof ServerPlayer player)) {
 +                continue;
              }
 -
 -            if (either == NOT_DONE_YET || either.right().isEmpty()) {
 -                return completableFuture;
-+            ServerPlayer player = (ServerPlayer)temp;
 +            if (!this.chunkMap.playerChunkManager.isChunkSent(player, this.pos.x, this.pos.z, onlyOnWatchDistanceEdge)) {
 +                continue;
              }
@@ -667,7 +665,7 @@
          private final Thread thread;
          private final CompletableFuture<?> future;
          private final String source;
-@@ -483,22 +435,36 @@
+@@ -483,22 +433,36 @@
      }
  
      public static enum FullChunkStatus {

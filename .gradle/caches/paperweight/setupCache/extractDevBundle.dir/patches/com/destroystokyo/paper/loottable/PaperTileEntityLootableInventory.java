@@ -1,6 +1,6 @@
 package com.destroystokyo.paper.loottable;
 
-import net.minecraft.server.MCUtil;
+import io.papermc.paper.util.MCUtil;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import org.bukkit.Bukkit;

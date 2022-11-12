@@ -4,7 +4,7 @@ import io.papermc.paper.util.maplist.IteratorSafeOrderedReferenceSet;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
-import net.minecraft.server.MCUtil;
+import io.papermc.paper.util.MCUtil;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import java.util.ArrayList;

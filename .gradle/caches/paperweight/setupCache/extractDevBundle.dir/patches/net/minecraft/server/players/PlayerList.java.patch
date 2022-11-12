@@ -302,7 +302,7 @@
 +        final net.minecraft.world.level.ChunkPos pos = new net.minecraft.world.level.ChunkPos(chunkX, chunkZ);
 +        net.minecraft.server.level.ChunkMap playerChunkMap = worldserver1.getChunkSource().chunkMap;
 +        net.minecraft.server.level.DistanceManager distanceManager = playerChunkMap.distanceManager;
-+        net.minecraft.server.ChunkSystem.scheduleTickingState(
++        io.papermc.paper.chunk.system.ChunkSystem.scheduleTickingState(
 +            worldserver1, chunkX, chunkZ, net.minecraft.server.level.ChunkHolder.FullChunkStatus.ENTITY_TICKING, true,
 +            ca.spottedleaf.concurrentutil.executor.standard.PrioritisedExecutor.Priority.HIGHEST,
 +            (chunk) -> {
@@ -805,7 +805,7 @@
 -            if (userBanListEntry.getExpires() != null) {
 -                mutableComponent.append(Component.translatable("multiplayer.disconnect.banned.expiration", BAN_DATE_FORMAT.format(userBanListEntry.getExpires())));
 +    // CraftBukkit start - Whole method, SocketAddress to LoginListener, added hostname to signature, return EntityPlayer
-+    public ServerPlayer canPlayerLogin(ServerLoginPacketListenerImpl loginlistener, GameProfile gameprofile, ProfilePublicKey profilepublickey, String hostname) {
++    public ServerPlayer canPlayerLogin(ServerLoginPacketListenerImpl loginlistener, GameProfile gameprofile, ProfilePublicKey profilepublickey) {
 +        MutableComponent ichatmutablecomponent;
 +
 +        // Moved from processLogin
@@ -851,7 +851,7 @@
 +
 +        ServerPlayer entity = new ServerPlayer(this.server, this.server.getLevel(Level.OVERWORLD), gameprofile, profilepublickey);
 +        Player player = entity.getBukkitEntity();
-+        PlayerLoginEvent event = new PlayerLoginEvent(player, hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.connection.getRawAddress()).getAddress());
++        PlayerLoginEvent event = new PlayerLoginEvent(player, loginlistener.connection.hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.connection.getRawAddress()).getAddress());
 +
 +        // Paper start - Fix MC-158900
 +        UserBanListEntry gameprofilebanentry;
@@ -1395,7 +1395,7 @@
 +        boolean isOp = this.ops.contains(gameprofile);
 +        boolean isWhitelisted = !this.doWhiteList || isOp || this.whitelist.contains(gameprofile);
 +        final com.destroystokyo.paper.event.profile.ProfileWhitelistVerifyEvent event;
-+        event = new com.destroystokyo.paper.event.profile.ProfileWhitelistVerifyEvent(net.minecraft.server.MCUtil.toBukkit(gameprofile), this.doWhiteList, isWhitelisted, isOp, org.spigotmc.SpigotConfig.whitelistMessage);
++        event = new com.destroystokyo.paper.event.profile.ProfileWhitelistVerifyEvent(io.papermc.paper.util.MCUtil.toBukkit(gameprofile), this.doWhiteList, isWhitelisted, isOp, org.spigotmc.SpigotConfig.whitelistMessage);
 +        event.callEvent();
 +        if (!event.isWhitelisted()) {
 +            if (loginEvent != null) {
@@ -1462,7 +1462,7 @@
 +    }
  
 +    public void saveAll(int interval) {
-+        net.minecraft.server.MCUtil.ensureMain("Save Players" , () -> { // Paper - Ensure main
++        io.papermc.paper.util.MCUtil.ensureMain("Save Players" , () -> { // Paper - Ensure main
 +        MinecraftTimings.savePlayers.startTiming(); // Paper
 +        int numSaved = 0;
 +        long now = MinecraftServer.currentTick;

@@ -6,6 +6,7 @@ import org.bukkit.craftbukkit.v1_19_R1.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v1_19_R1.util.CraftChatMessage;
 import org.bukkit.inventory.ItemStack;
 
+@Deprecated // Paper
 public class CraftAdvancementDisplay implements org.bukkit.advancement.AdvancementDisplay {
 
     private final DisplayInfo handle;

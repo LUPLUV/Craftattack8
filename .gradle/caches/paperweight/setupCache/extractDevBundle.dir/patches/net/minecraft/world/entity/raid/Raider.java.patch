@@ -152,7 +152,7 @@
              }
  
              if (this.raid != null) {
-@@ -230,19 +241,21 @@
+@@ -230,19 +241,28 @@
  
      @Override
      protected void pickUpItem(ItemEntity item) {
@@ -168,12 +168,19 @@
 +        boolean flag = this.hasActiveRaid() && this.getCurrentRaid().getLeader(this.getWave()) != null;
 +
 +        if (this.hasActiveRaid() && !flag && ItemStack.matches(itemstack, Raid.getLeaderBannerInstance())) {
++            // Paper start
++            if (org.bukkit.craftbukkit.v1_19_R1.event.CraftEventFactory.callEntityPickupItemEvent(this, item, 0, false).isCancelled()) {
++                return;
++            }
++            // Paper end
 +            EquipmentSlot enumitemslot = EquipmentSlot.HEAD;
 +            ItemStack itemstack1 = this.getItemBySlot(enumitemslot);
 +            double d0 = (double) this.getEquipmentDropChance(enumitemslot);
 +
 +            if (!itemstack1.isEmpty() && (double) Math.max(this.random.nextFloat() - 0.1F, 0.0F) < d0) {
++                this.forceDrops = true; // Paper
 +                this.spawnAtLocation(itemstack1);
++                this.forceDrops = false; // Paper
              }
  
              this.onItemPickup(item);
@@ -184,7 +191,7 @@
              item.discard();
              this.getCurrentRaid().setLeader(this.getWave(), this);
              this.setPatrolLeader(true);
-@@ -288,89 +301,28 @@
+@@ -288,89 +308,28 @@
  
      public abstract SoundEvent getCelebrateSound();
  
@@ -284,7 +291,7 @@
                      }
                  }
  
-@@ -384,55 +336,17 @@
+@@ -384,55 +343,17 @@
          public void tick() {
              if (this.mob.getNavigation().getTargetPos().closerToCenterThan(this.mob.position(), 1.414D)) {
                  List<ItemEntity> list = this.mob.level.getEntitiesOfClass(ItemEntity.class, this.mob.getBoundingBox().inflate(4.0D, 4.0D, 4.0D), Raider.ALLOWED_ITEMS);
@@ -343,7 +350,7 @@
          private final Raider raider;
          private final double speedModifier;
          private BlockPos poiPos;
-@@ -458,31 +372,28 @@
+@@ -458,31 +379,28 @@
          }
  
          private boolean hasSuitablePoi() {
@@ -383,7 +390,7 @@
                  this.visited.add(this.poiPos);
              }
  
-@@ -492,37 +403,44 @@
+@@ -492,37 +410,44 @@
          public void start() {
              super.start();
              this.raider.setNoActionTime(0);
@@ -440,7 +447,7 @@
          }
  
          private void updateVisited() {
-@@ -532,4 +450,125 @@
+@@ -532,4 +457,125 @@
  
          }
      }

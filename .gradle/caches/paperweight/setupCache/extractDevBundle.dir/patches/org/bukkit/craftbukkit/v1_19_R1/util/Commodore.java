@@ -54,14 +54,14 @@ public class Commodore
     ) );
 
     // Paper start - Plugin rewrites
+    private static final String CB_PACKAGE = org.bukkit.Bukkit.getServer().getClass().getPackageName().replace('.', '/');
     private static final Map<String, String> SEARCH_AND_REMOVE = initReplacementsMap();
-    private static final java.util.jar.Manifest manifest = io.papermc.paper.util.JarManifests.manifest(Commodore.class);
     private static Map<String, String> initReplacementsMap()
     {
         Map<String, String> getAndRemove = new HashMap<>();
         // Be wary of maven shade's relocations
-        getAndRemove.put( "org/bukkit/".concat( "craftbukkit/libs/it/unimi/dsi/fastutil/" ), "org/bukkit/".concat( "craftbukkit/libs/" ) ); // Remap fastutil to our location
 
+        final java.util.jar.Manifest manifest = io.papermc.paper.util.JarManifests.manifest(Commodore.class);
         if ( Boolean.getBoolean( "debug.rewriteForIde" ) && manifest != null)
         {
             // unversion incoming calls for pre-relocate debug work
@@ -434,6 +434,11 @@ public class Commodore
                         {
                             desc = getOriginalOrRewrite(desc);
                         }
+                        if (owner.equals("org/bukkit/advancement/Advancement") && name.equals("getDisplay") && desc.endsWith(")Lorg/bukkit/advancement/AdvancementDisplay;")) {
+                            super.visitTypeInsn(Opcodes.CHECKCAST, CB_PACKAGE + "/advancement/CraftAdvancement");
+                            super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, CB_PACKAGE + "/advancement/CraftAdvancement", "getDisplay0", desc, false);
+                            return;
+                        }
                         if (owner.equals("org/bukkit/WorldCreator") && name.equals("keepSpawnLoaded") && desc.equals("(Lnet/kyori/adventure/util/TriState;)V")) {
                             super.visitMethodInsn(opcode, owner, name, "(Lnet/kyori/adventure/util/TriState;)Lorg/bukkit/WorldCreator;", itf);
                             // new method has a return, so, make sure we pop it
@@ -531,6 +536,13 @@ public class Commodore
                     @Override
                     public void visitLdcInsn(Object value)
                     {
+                        // Paper start
+                        if (value instanceof Type type) {
+                            if (type.getSort() == Type.OBJECT || type.getSort() == Type.ARRAY) {
+                                value = Type.getType(getOriginalOrRewrite(type.getDescriptor()));
+                            }
+                        }
+                        // Paper end
                         if ( value instanceof String && ( (String) value ).equals( "com.mysql.jdbc.Driver" ) )
                         {
                             super.visitLdcInsn( "com.mysql.cj.jdbc.Driver" );

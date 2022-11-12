@@ -52,7 +52,7 @@
      }
  
      public static EntityArgument players() {
-@@ -82,50 +84,63 @@
+@@ -82,50 +84,68 @@
      }
  
      public static Collection<ServerPlayer> getPlayers(CommandContext<CommandSourceStack> context, String name) throws CommandSyntaxException {
@@ -121,7 +121,12 @@
 +            StringReader stringreader = new StringReader(suggestionsbuilder.getInput());
 +
 +            stringreader.setCursor(suggestionsbuilder.getStart());
-+            EntitySelectorParser argumentparserselector = new EntitySelectorParser(stringreader, icompletionprovider.hasPermission(2), true); // Paper
++            // Paper start
++            final boolean permission = object instanceof CommandSourceStack stack
++                    ? stack.hasPermission(2, "minecraft.command.selector")
++                    : icompletionprovider.hasPermission(2);
++            EntitySelectorParser argumentparserselector = new EntitySelectorParser(stringreader, permission, true); // Paper
++            // Paper end
  
              try {
 -                entitySelectorParser.parse();
@@ -143,7 +148,7 @@
              });
          } else {
              return Suggestions.empty();
-@@ -133,16 +148,19 @@
+@@ -133,16 +153,19 @@
      }
  
      public Collection<String> getExamples() {
@@ -165,7 +170,7 @@
              if (properties.single) {
                  i |= 1;
              }
-@@ -155,33 +173,33 @@
+@@ -155,33 +178,33 @@
          }
  
          @Override

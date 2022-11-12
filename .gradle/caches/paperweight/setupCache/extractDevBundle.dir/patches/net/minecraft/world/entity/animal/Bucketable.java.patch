@@ -64,7 +64,7 @@
      }
  
      /** @deprecated */
-@@ -89,20 +97,36 @@
+@@ -89,20 +97,39 @@
      }
  
      static <T extends LivingEntity & Bucketable> Optional<InteractionResult> bucketMobPickup(Player player, InteractionHand hand, T entity) {
@@ -91,8 +91,11 @@
 +            itemstack1 = CraftItemStack.asNMSCopy(playerBucketFishEvent.getEntityBucket());
 +            if (playerBucketFishEvent.isCancelled()) {
 +                ((ServerPlayer) player).containerMenu.sendAllDataToRemote(); // We need to update inventory to resync client's bucket
-+                ((ServerPlayer) player).connection.send(new ClientboundAddEntityPacket(entity)); // We need to play out these packets as the client assumes the fish is gone
-+                ((ServerPlayer) player).connection.send(new ClientboundSetEntityDataPacket(entity.getId(), entity.getEntityData(), true)); // Need to send data such as the display name to client
++                // Paper start
++                if (entity.tracker != null) {
++                    entity.tracker.resendPossiblyDesyncedEntity(((ServerPlayer) player));
++                }
++                // Paper end
 +                return Optional.of(InteractionResult.FAIL);
 +            }
 +            entity.playSound(((Bucketable) entity).getPickupSound(), 1.0F, 1.0F);

@@ -171,7 +171,7 @@
      @Override
      public void tick(BlockState state, ServerLevel world, BlockPos pos, RandomSource random) {
 -        world.scheduleTick(pos, this, getFireTickDelay(world.random));
-+        world.scheduleTick(pos, (Block) this, FireBlock.getFireTickDelay(world.random));
++        world.scheduleTick(pos, (Block) this, FireBlock.getFireTickDelay(world)); // Paper
          if (world.getGameRules().getBoolean(GameRules.RULE_DOFIRETICK)) {
              if (!state.canSurvive(world, pos)) {
 -                world.removeBlock(pos, false);
@@ -346,7 +346,7 @@
              if (block instanceof TntBlock) {
 -                TntBlock.explode(world, pos);
 +                // Paper start - TNTPrimeEvent
-+                org.bukkit.block.Block tntBlock = net.minecraft.server.MCUtil.toBukkitBlock(world, blockposition);
++                org.bukkit.block.Block tntBlock = io.papermc.paper.util.MCUtil.toBukkitBlock(world, blockposition);
 +                if (!new com.destroystokyo.paper.event.block.TNTPrimeEvent(tntBlock, com.destroystokyo.paper.event.block.TNTPrimeEvent.PrimeReason.FIRE, null).callEvent()) {
 +                    return;
 +                }
@@ -397,7 +397,7 @@
              }
  
              return i;
-@@ -272,9 +357,11 @@
+@@ -272,18 +357,22 @@
      }
  
      @Override
@@ -408,11 +408,16 @@
 +    public void onPlace(BlockState iblockdata, Level world, BlockPos blockposition, BlockState iblockdata1, boolean flag, UseOnContext itemActionContext) {
 +        super.onPlace(iblockdata, world, blockposition, iblockdata1, flag, itemActionContext);
 +        // Paper end
-+        world.scheduleTick(blockposition, this, getFireTickDelay(world.random));
++        world.scheduleTick(blockposition, this, getFireTickDelay(world)); // Paper
      }
  
-     private static int getFireTickDelay(RandomSource random) {
-@@ -283,7 +370,7 @@
+-    private static int getFireTickDelay(RandomSource random) {
+-        return 30 + random.nextInt(10);
++    // Paper start - customisable fire tick delay
++    private static int getFireTickDelay(Level world) {
++        return world.paperConfig().environment.fireTickDelay + world.random.nextInt(10);
++    // Paper end
+     }
  
      @Override
      protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
@@ -421,7 +426,7 @@
      }
  
      private void setFlammable(Block block, int burnChance, int spreadChance) {
-@@ -292,157 +379,158 @@
+@@ -292,157 +381,158 @@
      }
  
      public static void bootStrap() {

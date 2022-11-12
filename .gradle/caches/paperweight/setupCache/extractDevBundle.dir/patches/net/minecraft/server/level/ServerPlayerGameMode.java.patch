@@ -460,7 +460,7 @@
  
 -                    return true;
 +                    // return true; // CraftBukkit
-                 }
++                }
 +                // CraftBukkit start
 +                java.util.List<net.minecraft.world.entity.item.ItemEntity> itemsToDrop = level.captureDrops; // Paper - store current list
 +                level.captureDrops = null; // Paper - Remove this earlier so that we can actually drop stuff
@@ -472,7 +472,7 @@
 +                // Drop event experience
 +                if (flag && event != null) {
 +                    iblockdata.getBlock().popExperience(this.level, pos, event.getExpToDrop(), this.player); // Paper
-+                }
+                 }
 +                // Paper start - trigger after items are dropped (check impls of block#playerDestroy)
 +                if (mainHandStack != null) {
 +                    if (flag && isCorrectTool && event.isDropItems() && block instanceof net.minecraft.world.level.block.BeehiveBlock && tileentity instanceof net.minecraft.world.level.block.entity.BeehiveBlockEntity beehiveBlockEntity) { // simulates the guard on block#playerDestroy above
@@ -525,7 +525,7 @@
                      player.setItemInHand(hand, ItemStack.EMPTY);
                  }
  
-@@ -289,54 +496,106 @@
+@@ -289,54 +496,107 @@
                      player.inventoryMenu.sendAllDataToRemote();
                  }
  
@@ -548,6 +548,7 @@
 +        BlockState iblockdata = world.getBlockState(blockposition);
 +        InteractionResult enuminteractionresult = InteractionResult.PASS;
 +        boolean cancelledBlock = false;
++        boolean cancelledItem = false; // Paper - correctly handle items on cooldown
 +
          if (this.gameModeForPlayer == GameType.SPECTATOR) {
 -            MenuProvider menuProvider = blockState.getMenuProvider(world, blockPos);
@@ -558,10 +559,10 @@
 +        }
 +
 +        if (player.getCooldowns().isOnCooldown(stack.getItem())) {
-+            cancelledBlock = true;
++            cancelledItem = true; // Paper - correctly handle items on cooldown
 +        }
 +
-+        PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(player, Action.RIGHT_CLICK_BLOCK, blockposition, hitResult.getDirection(), stack, cancelledBlock, hand, hitResult.getLocation()); // Paper
++        PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(player, Action.RIGHT_CLICK_BLOCK, blockposition, hitResult.getDirection(), stack, cancelledBlock, cancelledItem, hand, hitResult.getLocation()); // Paper
 +        this.firedInteract = true;
 +        this.interactResult = event.useItemInHand() == Event.Result.DENY;
 +        this.interactPosition = blockposition.immutable();

@@ -23,7 +23,7 @@ import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet;
 import it.unimi.dsi.fastutil.objects.ReferenceLinkedOpenHashSet;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.ChunkSystem;
+import io.papermc.paper.chunk.system.ChunkSystem;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ChunkMap;
@@ -185,7 +185,7 @@ public final class ChunkHolderManager {
             this.autoSaveQueue.remove(holder);
 
             holder.lastAutoSave = currentTick;
-            if (holder.save(false, false)) {
+            if (holder.save(false, false) != null) {
                 ++autoSaved;
             }
 
@@ -217,12 +217,26 @@ public final class ChunkHolderManager {
         boolean needsFlush = false;
         final int flushInterval = 50;
 
+        int savedChunk = 0;
+        int savedEntity = 0;
+        int savedPoi = 0;
+
         for (int i = 0, len = holders.size(); i < len; ++i) {
             final NewChunkHolder holder = holders.get(i);
             try {
-                if (holder.save(shutdown, false)) {
+                final NewChunkHolder.SaveStat saveStat = holder.save(shutdown, false);
+                if (saveStat != null) {
                     ++saved;
                     needsFlush = flush;
+                    if (saveStat.savedChunk()) {
+                        ++savedChunk;
+                    }
+                    if (saveStat.savedEntityChunk()) {
+                        ++savedEntity;
+                    }
+                    if (saveStat.savedPoiChunk()) {
+                        ++savedPoi;
+                    }
                 }
             } catch (final ThreadDeath thr) {
                 throw thr;
@@ -245,7 +259,7 @@ public final class ChunkHolderManager {
             RegionFileIOThread.flush();
         }
         if (logProgress) {
-            LOGGER.info("Saved " + saved + " chunks in world '" + this.world.getWorld().getName() + "' in " + TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - start) + "s");
+            LOGGER.info("Saved " + savedChunk + " block chunks, " + savedEntity + " entity chunks, " + savedPoi + " poi chunks in world '" + this.world.getWorld().getName() + "' in " + format.format(1.0E-9 * (System.nanoTime() - start)) + "s");
         }
     }
 

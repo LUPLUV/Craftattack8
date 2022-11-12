@@ -26,7 +26,7 @@ public class Status implements CommandExecutor {
                 if(args.length == 1){
                     if(!args[0].equalsIgnoreCase("reset")) {
                         String status = args[0].toUpperCase();
-                        if(status.length() <= 4) {
+                        if(status.length() <= 20) {
                             try {
                                 FileManager.setStatus(status, p);
                                 Tab.update(p);
@@ -34,7 +34,7 @@ public class Status implements CommandExecutor {
                                 e.printStackTrace();
                             }
                         }else
-                            p.sendMessage(Strings.getPrefix() + "§cMax length = 4");
+                            p.sendMessage(Strings.getPrefix() + "§cMax length = 20");
                     }else {
                         try {
                             FileManager.setStatus(null, p);

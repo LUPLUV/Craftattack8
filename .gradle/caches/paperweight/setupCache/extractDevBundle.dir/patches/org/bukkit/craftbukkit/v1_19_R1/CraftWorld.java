@@ -169,7 +169,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
     public int getTileEntityCount() {
         // We don't use the full world tile entity list, so we must iterate chunks
         int size = 0;
-        for (ChunkHolder playerchunk : net.minecraft.server.ChunkSystem.getVisibleChunkHolders(this.world)) {
+        for (ChunkHolder playerchunk : io.papermc.paper.chunk.system.ChunkSystem.getVisibleChunkHolders(this.world)) {
             net.minecraft.world.level.chunk.LevelChunk chunk = playerchunk.getTickingChunk();
             if (chunk == null) {
                 continue;
@@ -188,7 +188,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
     public int getChunkCount() {
         int ret = 0;
 
-        for (ChunkHolder chunkHolder : net.minecraft.server.ChunkSystem.getVisibleChunkHolders(this.world)) {
+        for (ChunkHolder chunkHolder : io.papermc.paper.chunk.system.ChunkSystem.getVisibleChunkHolders(this.world)) {
             if (chunkHolder.getTickingChunk() != null) {
                 ++ret;
             }
@@ -343,7 +343,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
 
     // Paper start
     private void addTicket(int x, int z) {
-        net.minecraft.server.MCUtil.MAIN_EXECUTOR.execute(() -> world.getChunkSource().addRegionTicket(TicketType.PLUGIN, new ChunkPos(x, z), 0, Unit.INSTANCE)); // Paper
+        io.papermc.paper.util.MCUtil.MAIN_EXECUTOR.execute(() -> world.getChunkSource().addRegionTicket(TicketType.PLUGIN, new ChunkPos(x, z), 0, Unit.INSTANCE)); // Paper
     }
     // Paper end
 
@@ -384,7 +384,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
 
     @Override
     public Chunk[] getLoadedChunks() {
-        List<ChunkHolder> chunks = net.minecraft.server.ChunkSystem.getVisibleChunkHolders(this.world); // Paper
+        List<ChunkHolder> chunks = io.papermc.paper.chunk.system.ChunkSystem.getVisibleChunkHolders(this.world); // Paper
         return chunks.stream().map(ChunkHolder::getFullChunkNow).filter(Objects::nonNull).map(net.minecraft.world.level.chunk.LevelChunk::getBukkitChunk).toArray(Chunk[]::new);
     }
 
@@ -768,8 +768,8 @@ public class CraftWorld extends CraftRegionAccessor implements World {
     // Paper start
     @Override
     public Location findLightningRod(Location location) {
-        return this.world.findLightningRod(net.minecraft.server.MCUtil.toBlockPosition(location))
-            .map(blockPos -> net.minecraft.server.MCUtil.toLocation(this.world, blockPos)
+        return this.world.findLightningRod(io.papermc.paper.util.MCUtil.toBlockPosition(location))
+            .map(blockPos -> io.papermc.paper.util.MCUtil.toLocation(this.world, blockPos)
                 // get the actual rod pos
                 .subtract(0, 1, 0))
             .orElse(null);
@@ -777,8 +777,8 @@ public class CraftWorld extends CraftRegionAccessor implements World {
 
     @Override
     public Location findLightningTarget(Location location) {
-        final BlockPos pos = this.world.findLightningTargetAround(net.minecraft.server.MCUtil.toBlockPosition(location), true);
-        return pos == null ? null : net.minecraft.server.MCUtil.toLocation(this.world, pos);
+        final BlockPos pos = this.world.findLightningTargetAround(io.papermc.paper.util.MCUtil.toBlockPosition(location), true);
+        return pos == null ? null : io.papermc.paper.util.MCUtil.toLocation(this.world, pos);
     }
     // Paper end
 
@@ -1269,7 +1269,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
 
     @Override
     public void setDifficulty(Difficulty difficulty) {
-        this.getHandle().serverLevelData.setDifficulty(net.minecraft.world.Difficulty.byId(difficulty.getValue()));
+        this.getHandle().getServer().setDifficulty(this.getHandle(), net.minecraft.world.Difficulty.byId(difficulty.getValue()), true); // Paper - don't skip other difficulty-changing logic
     }
 
     @Override
@@ -2352,7 +2352,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
 
         java.util.concurrent.CompletableFuture<Chunk> ret = new java.util.concurrent.CompletableFuture<>();
 
-        net.minecraft.server.ChunkSystem.scheduleChunkLoad(this.getHandle(), x, z, gen, ChunkStatus.FULL, true, priority, (c) -> {
+        io.papermc.paper.chunk.system.ChunkSystem.scheduleChunkLoad(this.getHandle(), x, z, gen, ChunkStatus.FULL, true, priority, (c) -> {
             net.minecraft.server.MinecraftServer.getServer().scheduleOnMain(() -> {
                 net.minecraft.world.level.chunk.LevelChunk chunk = (net.minecraft.world.level.chunk.LevelChunk)c;
                 if (chunk != null) addTicket(x, z); // Paper

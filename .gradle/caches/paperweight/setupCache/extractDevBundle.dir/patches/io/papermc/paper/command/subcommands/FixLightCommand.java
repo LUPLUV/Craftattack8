@@ -3,7 +3,7 @@ package io.papermc.paper.command.subcommands;
 import io.papermc.paper.command.PaperSubcommand;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import net.minecraft.server.MCUtil;
+import io.papermc.paper.util.MCUtil;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerLevel;

@@ -5,7 +5,7 @@
          super.tick();
          if (this.fuse > 0) {
 +            // Paper start - Configurable TNT entity height nerf
-+            if (this.level.paperConfig().fixes.tntEntityHeightNerf != 0 && this.getY() > this.level.paperConfig().fixes.tntEntityHeightNerf) {
++            if (this.level.paperConfig().fixes.tntEntityHeightNerf.test(v -> this.getY() > v)) {
 +                this.discard();
 +                return;
 +            }

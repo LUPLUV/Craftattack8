@@ -1394,7 +1394,7 @@
              }
  
          }
-@@ -846,113 +1370,276 @@
+@@ -846,113 +1370,277 @@
      public void handleBlockEntityTagQuery(ServerboundBlockEntityTagQuery packet) {
          PacketUtils.ensureRunningOnSameThread(packet, this, this.player.getLevel());
          if (this.player.hasPermissions(2)) {
@@ -1647,6 +1647,7 @@
 +                            }
 +                            if (!this.player.noPhysics && !this.player.isSleeping() && teleportBack) { // Paper end - optimise out extra getCubes
 +                                this.internalTeleport(d3, d4, d5, f, f1, Collections.emptySet(), false); // CraftBukkit - SPIGOT-1807: Don't call teleport event, when the client thinks the player is falling, because the chunks are not loaded on the client yet.
++                                this.player.doCheckFallDamage(this.player.getY() - prevY, packet.isOnGround()); // Paper - fix nothing mlg (sneaking and jumping before impact)
 +                            } else {
 +                                // CraftBukkit start - fire PlayerMoveEvent
 +                                // Rest to old location first
@@ -1731,7 +1732,7 @@
                              }
                          }
                      }
-@@ -961,65 +1648,211 @@
+@@ -961,65 +1649,211 @@
          }
      }
  
@@ -1968,7 +1969,7 @@
                      this.player.drop(false);
                  }
  
-@@ -1036,8 +1869,34 @@
+@@ -1036,8 +1870,34 @@
              case START_DESTROY_BLOCK:
              case ABORT_DESTROY_BLOCK:
              case STOP_DESTROY_BLOCK:
@@ -2004,7 +2005,7 @@
                  return;
              default:
                  throw new IllegalArgumentException("Invalid player action");
-@@ -1049,47 +1908,83 @@
+@@ -1049,47 +1909,83 @@
              return false;
          } else {
              Item item = stack.getItem();
@@ -2113,7 +2114,7 @@
              }
          }
      }
-@@ -1097,15 +1992,62 @@
+@@ -1097,15 +1993,62 @@
      @Override
      public void handleUseItem(ServerboundUseItemPacket packet) {
          PacketUtils.ensureRunningOnSameThread(packet, this, this.player.getLevel());
@@ -2183,7 +2184,7 @@
              }
  
          }
-@@ -1115,10 +2057,14 @@
+@@ -1115,10 +2058,14 @@
      public void handleTeleportToEntityPacket(ServerboundTeleportToEntityPacket packet) {
          PacketUtils.ensureRunningOnSameThread(packet, this, this.player.getLevel());
          if (this.player.isSpectator()) {
@@ -2201,7 +2202,7 @@
                      return;
                  }
              }
-@@ -1130,36 +2076,62 @@
+@@ -1130,36 +2077,62 @@
      public void handleResourcePackResponse(ServerboundResourcePackPacket packet) {
          PacketUtils.ensureRunningOnSameThread(packet, this, this.player.getLevel());
          if (packet.getAction() == ServerboundResourcePackPacket.Action.DECLINED && this.server.isResourcePackRequired()) {
@@ -2274,7 +2275,7 @@
              this.server.halt(false);
          }
  
-@@ -1175,26 +2147,46 @@
+@@ -1175,26 +2148,46 @@
  
      @Override
      public void send(Packet<?> packet) {
@@ -2327,7 +2328,7 @@
              if (this.player.getInventory().selected != packet.getSlot() && this.player.getUsedItemHand() == InteractionHand.MAIN_HAND) {
                  this.player.stopUsingItem();
              }
-@@ -1202,30 +2194,42 @@
+@@ -1202,30 +2195,42 @@
              this.player.getInventory().selected = packet.getSlot();
              this.player.resetLastActionTime();
          } else {
@@ -2384,7 +2385,7 @@
              }
  
          }
-@@ -1233,13 +2237,15 @@
+@@ -1233,13 +2238,15 @@
  
      @Override
      public void handleChatCommand(ServerboundChatCommandPacket packet) {
@@ -2403,7 +2404,7 @@
                  });
              }
  
-@@ -1247,63 +2253,102 @@
+@@ -1247,63 +2254,102 @@
      }
  
      private void performChatCommand(ServerboundChatCommandPacket packet) {
@@ -2537,7 +2538,7 @@
                  set = this.lastSeenMessagesValidator.validateAndUpdate(acknowledgment);
              }
  
-@@ -1318,19 +2363,20 @@
+@@ -1318,19 +2364,20 @@
      }
  
      private boolean updateChatOrder(Instant timestamp) {
@@ -2564,7 +2565,7 @@
              if (!SharedConstants.isAllowedChatCharacter(message.charAt(i))) {
                  return true;
              }
-@@ -1339,50 +2385,251 @@
+@@ -1339,50 +2386,252 @@
          return false;
      }
  
@@ -2773,6 +2774,7 @@
 +                }
 +            });
 +        } else if (this.player.getChatVisibility() == ChatVisiblity.SYSTEM) { // Re-add "Command Only" flag check
++            this.server.getPlayerList().broadcastMessageHeader(message, Set.of()); // Paper
 +            this.send(new ClientboundSystemChatPacket(Component.translatable("chat.cannotSend").withStyle(ChatFormatting.RED), false));
 +        } else {
 +            this.chat(s, message, true);
@@ -2838,7 +2840,7 @@
          }
  
      }
-@@ -1392,9 +2639,10 @@
+@@ -1392,9 +2641,10 @@
          if (this.handlesPreviewRequests()) {
              this.chatPreviewThrottler.schedule(() -> {
                  int i = packet.queryId();
@@ -2852,7 +2854,7 @@
                  });
              });
          }
-@@ -1407,62 +2655,72 @@
+@@ -1407,62 +2657,72 @@
  
      private void sendPreviewResponse(int queryId, Component preview) {
          this.send(new ClientboundChatPreviewPacket(queryId, preview), PacketSendListener.exceptionallySend(() -> {
@@ -2951,7 +2953,7 @@
              set = this.lastSeenMessagesValidator.validateAndUpdate(packet.lastSeenMessages());
          }
  
-@@ -1473,24 +2731,79 @@
+@@ -1473,24 +2733,79 @@
      }
  
      private void handleValidationFailure(Set<LastSeenMessagesValidator.ErrorCondition> reasons) {
@@ -3033,7 +3035,7 @@
                  break;
              case RELEASE_SHIFT_KEY:
                  this.player.setShiftKeyDown(false);
-@@ -1509,23 +2822,27 @@
+@@ -1509,23 +2824,27 @@
                  break;
              case START_RIDING_JUMP:
                  if (this.player.getVehicle() instanceof PlayerRideableJumping) {
@@ -3069,7 +3071,7 @@
                  }
                  break;
              case START_FALL_FLYING:
-@@ -1544,16 +2861,19 @@
+@@ -1544,16 +2863,19 @@
      }
  
      public void addPendingMessage(PlayerChatMessage message) {
@@ -3094,7 +3096,7 @@
              }
  
          }
-@@ -1562,24 +2882,81 @@
+@@ -1562,24 +2884,82 @@
      @Override
      public void handleInteract(ServerboundInteractPacket packet) {
          PacketUtils.ensureRunningOnSameThread(packet, this, this.player.getLevel());
@@ -3140,7 +3142,11 @@
 +
 +                        // Entity in bucket - SPIGOT-4048 and SPIGOT-6859
 +                        if ((entity instanceof Bucketable && entity instanceof LivingEntity && origItem != null && origItem.asItem() == Items.WATER_BUCKET) && (event.isCancelled() || ServerGamePacketListenerImpl.this.player.getInventory().getSelected() == null || ServerGamePacketListenerImpl.this.player.getInventory().getSelected().getItem() != origItem)) {
-+                            ServerGamePacketListenerImpl.this.send(new ClientboundAddEntityPacket(entity));
++                            // Paper start
++                            if (entity.tracker != null) {
++                                entity.tracker.resendPossiblyDesyncedEntity(((ServerPlayer) player)); // The entire mob gets deleted, so resend it.
++                            }
++                            // Paper end
 +                            player.containerMenu.sendAllDataToRemote();
 +                        }
 +
@@ -3151,12 +3157,9 @@
 +
 +                        if (event.isCancelled() || ServerGamePacketListenerImpl.this.player.getInventory().getSelected() == null || ServerGamePacketListenerImpl.this.player.getInventory().getSelected().getItem() != origItem) {
 +                            // Refresh the current entity metadata
-+                            // Paper start - update entity for all players
-+                            ClientboundSetEntityDataPacket entityDataPacket = new ClientboundSetEntityDataPacket(entity.getId(), entity.getEntityData(), true);
++                            // Paper start
 +                            if (entity.tracker != null) {
-+                                entity.tracker.broadcast(entityDataPacket);
-+                            } else {
-+                                ServerGamePacketListenerImpl.this.send(entityDataPacket);
++                                entity.tracker.resendPossiblyDesyncedEntityData(((ServerPlayer) player));
 +                            }
 +                            // Paper end
 +                            // SPIGOT-7136 - Allays
@@ -3187,7 +3190,7 @@
                              }
                          }
  
-@@ -1587,41 +2964,78 @@
+@@ -1587,41 +2967,78 @@
  
                      @Override
                      public void onInteraction(InteractionHand hand) {
@@ -3276,7 +3279,7 @@
                      CriteriaTriggers.CHANGED_DIMENSION.trigger(this.player, Level.END, Level.OVERWORLD);
                  } else {
                      if (this.player.getHealth() > 0.0F) {
-@@ -1630,8 +3044,8 @@
+@@ -1630,8 +3047,8 @@
  
                      this.player = this.server.getPlayerList().respawn(this.player, false);
                      if (this.server.isHardcore()) {
@@ -3287,7 +3290,7 @@
                      }
                  }
                  break;
-@@ -1643,35 +3057,328 @@
+@@ -1643,35 +3060,328 @@
  
      @Override
      public void handleContainerClose(ServerboundContainerClosePacket packet) {
@@ -3625,7 +3628,7 @@
                          this.player.containerMenu.broadcastFullState();
                      } else {
                          this.player.containerMenu.broadcastChanges();
-@@ -1684,15 +3391,29 @@
+@@ -1684,15 +3394,29 @@
  
      @Override
      public void handlePlaceRecipe(ServerboundPlaceRecipePacket packet) {
@@ -3659,7 +3662,7 @@
              }
          }
      }
-@@ -1700,13 +3421,15 @@
+@@ -1700,13 +3424,15 @@
      @Override
      public void handleContainerButtonClick(ServerboundContainerButtonClickPacket packet) {
          PacketUtils.ensureRunningOnSameThread(packet, this, this.player.getLevel());
@@ -3678,7 +3681,7 @@
                      this.player.containerMenu.broadcastChanges();
                  }
  
-@@ -1718,27 +3441,73 @@
+@@ -1718,27 +3444,73 @@
      public void handleSetCreativeModeSlot(ServerboundSetCreativeModeSlotPacket packet) {
          PacketUtils.ensureRunningOnSameThread(packet, this, this.player.getLevel());
          if (this.player.gameMode.isCreative()) {
@@ -3767,7 +3770,7 @@
              }
          }
  
-@@ -1746,52 +3515,96 @@
+@@ -1746,52 +3518,96 @@
  
      @Override
      public void handleSignUpdate(ServerboundSignUpdatePacket packet) {
@@ -3884,7 +3887,7 @@
          }
  
      }
-@@ -1799,24 +3612,99 @@
+@@ -1799,24 +3615,99 @@
      @Override
      public void handlePlayerAbilities(ServerboundPlayerAbilitiesPacket packet) {
          PacketUtils.ensureRunningOnSameThread(packet, this, this.player.getLevel());
@@ -3986,7 +3989,7 @@
          }
      }
  
-@@ -1834,7 +3722,8 @@
+@@ -1834,7 +3725,8 @@
      }
  
      @FunctionalInterface

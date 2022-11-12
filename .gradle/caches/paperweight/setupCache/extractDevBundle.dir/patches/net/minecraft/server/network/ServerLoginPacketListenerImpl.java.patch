@@ -8,7 +8,7 @@
  import net.minecraft.network.protocol.game.ClientboundDisconnectPacket;
  import net.minecraft.network.protocol.login.ClientboundGameProfilePacket;
  import net.minecraft.network.protocol.login.ClientboundHelloPacket;
-@@ -40,37 +41,60 @@
+@@ -40,37 +41,59 @@
  import org.apache.commons.lang3.Validate;
  import org.slf4j.Logger;
  
@@ -41,7 +41,6 @@
      private ServerPlayer delayedAcceptPlayer;
      @Nullable
      private ProfilePublicKey.Data profilePublicKeyData;
-+    public String hostname = ""; // CraftBukkit - add field
 +    public boolean iKnowThisMayNotBeTheBestIdeaButPleaseDisableUsernameValidation = false; // Paper - username validation overriding
 +    private int velocityLoginMessageId = -1; // Paper - Velocity support
  
@@ -78,7 +77,7 @@
                  this.state = ServerLoginPacketListenerImpl.State.READY_TO_ACCEPT;
                  this.placeNewPlayer(this.delayedAcceptPlayer);
                  this.delayedAcceptPlayer = null;
-@@ -83,6 +107,13 @@
+@@ -83,6 +106,13 @@
  
      }
  
@@ -92,7 +91,7 @@
      @Override
      public Connection getConnection() {
          return this.connection;
-@@ -90,35 +121,67 @@
+@@ -90,35 +120,67 @@
  
      public void disconnect(Component reason) {
          try {
@@ -166,7 +165,7 @@
 -        if (component != null) {
 -            this.disconnect(component);
 +        // CraftBukkit start - fire PlayerLoginEvent
-+        ServerPlayer s = this.server.getPlayerList().canPlayerLogin(this, this.gameProfile, profilepublickey, hostname);
++        ServerPlayer s = this.server.getPlayerList().canPlayerLogin(this, this.gameProfile, profilepublickey);
 +
 +        if (s == null) {
 +            // this.disconnect(ichatbasecomponent);
@@ -174,7 +173,7 @@
          } else {
              this.state = ServerLoginPacketListenerImpl.State.ACCEPTED;
              if (this.server.getCompressionThreshold() >= 0 && !this.connection.isMemoryConnection()) {
-@@ -128,21 +191,28 @@
+@@ -128,21 +190,28 @@
              }
  
              this.connection.send(new ClientboundGameProfilePacket(this.gameProfile));
@@ -204,7 +203,7 @@
 +                MutableComponent ichatmutablecomponent = Component.translatable("multiplayer.disconnect.invalid_player_data");
 +                // Paper start
 +                if (MinecraftServer.getServer().isDebugging()) {
-+                    exception.printStackTrace();
++                    io.papermc.paper.util.TraceUtil.printStackTrace(exception);
 +                }
 +                // Paper end
 +
@@ -213,7 +212,7 @@
              }
          }
  
-@@ -154,11 +224,14 @@
+@@ -154,11 +223,14 @@
  
      @Override
      public void onDisconnect(Component reason) {
@@ -230,7 +229,7 @@
      }
  
      @Nullable
-@@ -174,117 +247,294 @@
+@@ -174,117 +246,294 @@
          }
      }
  
@@ -455,7 +454,7 @@
 +
 +                        // Paper start
 +                        com.destroystokyo.paper.profile.PlayerProfile profile = com.destroystokyo.paper.profile.CraftPlayerProfile.asBukkitMirror(ServerLoginPacketListenerImpl.this.gameProfile);
-+                        AsyncPlayerPreLoginEvent asyncEvent = new AsyncPlayerPreLoginEvent(playerName, address, rawAddress, uniqueId, profile, ServerLoginPacketListenerImpl.this.hostname); // Paper - add rawAddress & hostname
++                        AsyncPlayerPreLoginEvent asyncEvent = new AsyncPlayerPreLoginEvent(playerName, address, rawAddress, uniqueId, profile, ServerLoginPacketListenerImpl.this.connection.hostname); // Paper - add rawAddress & hostname
 +                        server.getPluginManager().callEvent(asyncEvent);
 +                        profile = asyncEvent.getPlayerProfile();
 +                        profile.complete(true); // Paper - setPlayerProfileAPI

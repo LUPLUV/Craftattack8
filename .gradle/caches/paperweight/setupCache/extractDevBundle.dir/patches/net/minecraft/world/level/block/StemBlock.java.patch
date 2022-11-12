@@ -41,7 +41,7 @@
 -            if (random.nextInt((int)(25.0F / f) + 1) == 0) {
 -                int i = state.getValue(AGE);
 +
-+            if (random.nextInt((int) ((100.0F / (this == Blocks.PUMPKIN_STEM ? world.spigotConfig.pumpkinModifier : world.spigotConfig.melonModifier)) * (25.0F / f)) + 1) == 0) { // Spigot
++            if (random.nextFloat() < ((this == Blocks.PUMPKIN_STEM ? world.spigotConfig.pumpkinModifier : world.spigotConfig.melonModifier) / (100.0f * (Math.floor((25.0F / f) + 1))))) { // Spigot - SPIGOT-7159: Better modifier resolution
 +                int i = (Integer) state.getValue(StemBlock.AGE);
 +
                  if (i < 7) {

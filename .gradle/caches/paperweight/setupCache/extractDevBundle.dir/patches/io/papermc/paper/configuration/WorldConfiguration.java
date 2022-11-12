@@ -13,13 +13,18 @@ import io.papermc.paper.configuration.type.BooleanOrDefault;
 import io.papermc.paper.configuration.type.DoubleOrDefault;
 import io.papermc.paper.configuration.type.Duration;
 import io.papermc.paper.configuration.type.EngineMode;
-import io.papermc.paper.configuration.type.IntOrDefault;
+import io.papermc.paper.configuration.type.IntOr;
 import io.papermc.paper.configuration.type.fallback.ArrowDespawnRate;
 import io.papermc.paper.configuration.type.fallback.AutosavePeriod;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2LongMap;
 import it.unimi.dsi.fastutil.objects.Reference2LongOpenHashMap;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import net.minecraft.Util;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
@@ -39,16 +44,10 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Required;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 @SuppressWarnings({"FieldCanBeLocal", "FieldMayBeFinal", "NotNullFieldNotInitialized", "InnerClassMayBeStatic"})
 public class WorldConfiguration extends ConfigurationPart {
     private static final Logger LOGGER = LogUtils.getLogger();
-    static final int CURRENT_VERSION = 28;
+    static final int CURRENT_VERSION = 29; // (when you change the version, change the comment, so it conflicts on rebases): zero height fixes
 
     private transient final SpigotWorldConfig spigotConfig;
     private transient final ResourceLocation worldKey;
@@ -139,8 +138,8 @@ public class WorldConfiguration extends ConfigurationPart {
             public WaterAnimalSpawnHeight wateranimalSpawnHeight;
 
             public class WaterAnimalSpawnHeight extends ConfigurationPart {
-                public IntOrDefault maximum = IntOrDefault.USE_DEFAULT;
-                public IntOrDefault minimum = IntOrDefault.USE_DEFAULT;
+                public IntOr.Default maximum = IntOr.Default.USE_DEFAULT;
+                public IntOr.Default minimum = IntOr.Default.USE_DEFAULT;
             }
 
             public SlimeSpawnHeight slimeSpawnHeight;
@@ -334,12 +333,13 @@ public class WorldConfiguration extends ConfigurationPart {
             public BooleanOrDefault findAlreadyDiscoveredLootTable = BooleanOrDefault.USE_DEFAULT;
         }
 
+        public int fireTickDelay = 30;
         public int waterOverLavaFlowSpeed = 5;
         public int portalSearchRadius = 128;
         public int portalCreateRadius = 16;
         public boolean portalSearchVanillaDimensionScaling = true;
         public boolean disableTeleportationSuffocationCheck = false;
-        public int netherCeilingVoidDamageHeight = 0;
+        public IntOr.Disabled netherCeilingVoidDamageHeight = IntOr.Disabled.DISABLED;
     }
 
     public Spawn spawn;
@@ -366,8 +366,8 @@ public class WorldConfiguration extends ConfigurationPart {
         public boolean preventTntFromMovingInWater = false;
         public boolean splitOverstackedLoot = true;
         public boolean fixCuringZombieVillagerDiscountExploit = true;
-        public int fallingBlockHeightNerf = 0;
-        public int tntEntityHeightNerf = 0;
+        public IntOr.Disabled fallingBlockHeightNerf = IntOr.Disabled.DISABLED;
+        public IntOr.Disabled tntEntityHeightNerf = IntOr.Disabled.DISABLED;
     }
 
     public UnsupportedSettings unsupportedSettings;

@@ -1,4 +1,4 @@
-package net.minecraft.server;
+package io.papermc.paper.util;
 
 import com.destroystokyo.paper.profile.CraftPlayerProfile;
 import com.destroystokyo.paper.profile.PlayerProfile;
@@ -13,6 +13,7 @@ import java.lang.ref.Cleaner;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ChunkHolder;
@@ -332,7 +333,7 @@ public final class MCUtil {
     public static void ensureMain(String reason, Runnable run) {
         if (!isMainThread()) {
             if (reason != null) {
-                new IllegalStateException("Asynchronous " + reason + "!").printStackTrace();
+                MinecraftServer.LOGGER.warn("Asynchronous " + reason + "!", new IllegalStateException());
             }
             getProcessQueue().add(run);
             return;
@@ -357,7 +358,7 @@ public final class MCUtil {
     public static <T> T ensureMain(String reason, Supplier<T> run) {
         if (!isMainThread()) {
             if (reason != null) {
-                new IllegalStateException("Asynchronous " + reason + "! Blocking thread until it returns ").printStackTrace();
+                MinecraftServer.LOGGER.warn("Asynchronous " + reason + "! Blocking thread until it returns ", new IllegalStateException());
             }
             Waitable<T> wait = new Waitable<T>() {
                 @Override
@@ -369,7 +370,7 @@ public final class MCUtil {
             try {
                 return wait.get();
             } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
+                MinecraftServer.LOGGER.warn("Encountered exception", e);
             }
             return null;
         }

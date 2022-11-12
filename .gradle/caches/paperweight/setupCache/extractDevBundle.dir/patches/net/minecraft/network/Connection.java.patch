@@ -59,10 +59,11 @@
      private PacketListener packetListener;
      private Component disconnectedReason;
      private boolean encrypted;
-@@ -82,73 +91,213 @@
+@@ -82,73 +91,214 @@
      private float averageSentPackets;
      private int tickCount;
      private boolean handlingFault;
++    public String hostname = ""; // CraftBukkit - add field
 +    // Paper start - add pending task queue
 +    private final Queue<Runnable> pendingTasks = new java.util.concurrent.ConcurrentLinkedQueue<>();
 +    public void execute(final Runnable run) {
@@ -239,7 +240,7 @@
  
              }
          }
-+        if (net.minecraft.server.MinecraftServer.getServer().isDebugging()) throwable.printStackTrace(); // Spigot
++        if (net.minecraft.server.MinecraftServer.getServer().isDebugging()) io.papermc.paper.util.TraceUtil.printStackTrace(throwable); // Spigot // Paper
      }
  
 -    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Packet<?> packet) {
@@ -300,7 +301,7 @@
                  this.disconnect(Component.translatable("multiplayer.disconnect.invalid_packet"));
              }
  
-@@ -158,92 +307,279 @@
+@@ -158,92 +308,279 @@
      }
  
      private static <T extends PacketListener> void genericsFtw(Packet<T> packet, PacketListener listener) {
@@ -378,7 +379,7 @@
 +        }
 +        packet.onPacketDispatch(getPlayer());
 +        if (connected && (InnerUtil.canSendImmediate(this, packet) || (
-+            net.minecraft.server.MCUtil.isMainThread() && packet.isReady() && this.queue.isEmpty() &&
++            io.papermc.paper.util.MCUtil.isMainThread() && packet.isReady() && this.queue.isEmpty() &&
 +            (packet.getExtraPackets() == null || packet.getExtraPackets().isEmpty())
 +        ))) {
 +            this.sendPacket(packet, callbacks, null); // Paper
@@ -525,7 +526,7 @@
 +        if (!isConnected()) {
 +            return true;
 +        }
-+        if (net.minecraft.server.MCUtil.isMainThread()) {
++        if (io.papermc.paper.util.MCUtil.isMainThread()) {
 +            return processQueue();
 +        } else if (isPending) {
 +            // Should only happen during login/status stages
@@ -547,12 +548,12 @@
 +        java.util.Iterator<PacketHolder> iterator = this.queue.iterator();
 +        while (iterator.hasNext()) {
 +            PacketHolder queued = iterator.next(); // poll -> peek
-+
+ 
 +            // Fix NPE (Spigot bug caused by handleDisconnection())
 +            if (false && queued == null) { // Paper - diff on change, this logic is redundant: iterator guarantees ret of an element - on change, hook the flush logic here
 +                return true;
 +            }
- 
++
 +            Packet<?> packet = queued.packet;
 +            if (!packet.isReady()) {
 +                // Paper start - make only one flush call per sendPacketQueue() call
@@ -612,7 +613,7 @@
          }
  
          if (!this.isConnected() && !this.disconnectionHandled) {
-@@ -251,7 +587,7 @@
+@@ -251,7 +588,7 @@
          }
  
          if (this.channel != null) {
@@ -621,7 +622,7 @@
          }
  
          if (this.tickCount++ % 20 == 0) {
-@@ -261,8 +597,8 @@
+@@ -261,8 +598,8 @@
      }
  
      protected void tickSecond() {
@@ -632,7 +633,7 @@
          this.sentPackets = 0;
          this.receivedPackets = 0;
      }
-@@ -271,9 +607,25 @@
+@@ -271,9 +608,25 @@
          return this.address;
      }
  
@@ -659,7 +660,7 @@
              this.disconnectedReason = disconnectReason;
          }
  
-@@ -292,45 +644,65 @@
+@@ -292,45 +645,65 @@
      }
  
      public static Connection connectToServer(InetSocketAddress address, boolean useEpoll) {
@@ -746,7 +747,7 @@
  
      public boolean isEncrypted() {
          return this.encrypted;
-@@ -359,17 +731,19 @@
+@@ -359,17 +732,19 @@
  
      public void setupCompression(int compressionThreshold, boolean rejectsBadPackets) {
          if (compressionThreshold >= 0) {
@@ -770,7 +771,7 @@
          } else {
              if (this.channel.pipeline().get("decompress") instanceof CompressionDecoder) {
                  this.channel.pipeline().remove("decompress");
-@@ -378,6 +752,7 @@
+@@ -378,6 +753,7 @@
              if (this.channel.pipeline().get("compress") instanceof CompressionEncoder) {
                  this.channel.pipeline().remove("compress");
              }
@@ -778,7 +779,7 @@
          }
  
      }
-@@ -385,7 +760,7 @@
+@@ -385,7 +761,7 @@
      public void handleDisconnection() {
          if (this.channel != null && !this.channel.isOpen()) {
              if (this.disconnectionHandled) {
@@ -787,7 +788,7 @@
              } else {
                  this.disconnectionHandled = true;
                  if (this.getDisconnectedReason() != null) {
-@@ -393,6 +768,27 @@
+@@ -393,6 +769,27 @@
                  } else if (this.getPacketListener() != null) {
                      this.getPacketListener().onDisconnect(Component.translatable("multiplayer.disconnect.generic"));
                  }
@@ -815,7 +816,7 @@
              }
  
          }
-@@ -406,7 +802,8 @@
+@@ -406,7 +803,8 @@
          return this.averageSentPackets;
      }
  
@@ -825,7 +826,7 @@
          final Packet<?> packet;
          @Nullable
          final PacketSendListener listener;
-@@ -416,4 +813,16 @@
+@@ -416,4 +814,16 @@
              this.listener = callbacks;
          }
      }

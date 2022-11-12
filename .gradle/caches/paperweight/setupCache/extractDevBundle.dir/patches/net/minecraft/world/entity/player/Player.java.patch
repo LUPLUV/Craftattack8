@@ -848,11 +848,11 @@
 +            if (team == null || team.allowFriendlyFire()) {
 +                return true;
 +            }
-+        }
+         }
 +
 +        if (this instanceof ServerPlayer) {
 +            return !team.hasPlayer(((ServerPlayer) this).getBukkitEntity());
-         }
++        }
 +        return !team.hasPlayer(this.level.getCraftServer().getOfflinePlayer(this.getScoreboardName()));
 +        // CraftBukkit end
      }
@@ -1043,7 +1043,7 @@
      }
  
      @Override
-@@ -1050,200 +1198,259 @@
+@@ -1050,200 +1198,268 @@
      @Override
      protected Vec3 maybeBackOffFromEdge(Vec3 movement, MoverType type) {
          if (!this.abilities.flying && movement.y <= 0.0D && (type == MoverType.SELF || type == MoverType.PLAYER) && this.isStayingOnGroundSurface() && this.isAboveGround()) {
@@ -1128,10 +1128,21 @@
      }
  
      public void attack(Entity target) {
-         if (target.isAttackable()) {
-             if (!target.skipAttackInteraction(this)) {
+-        if (target.isAttackable()) {
+-            if (!target.skipAttackInteraction(this)) {
 -                float f = (float)this.getAttributeValue(Attributes.ATTACK_DAMAGE);
 -                float g;
++        // Paper start - PlayerAttackEntityEvent
++        boolean willAttack = target.isAttackable() && !target.skipAttackInteraction(this); // Vanilla logic
++        io.papermc.paper.event.player.PrePlayerAttackEntityEvent playerAttackEntityEvent = new io.papermc.paper.event.player.PrePlayerAttackEntityEvent(
++            (org.bukkit.entity.Player) this.getBukkitEntity(),
++            target.getBukkitEntity(),
++            willAttack
++        );
++
++        if (playerAttackEntityEvent.callEvent() && willAttack) { // Logic moved to willAttack local variable.
++            {
++        // Paper end
 +                float f = (float) this.getAttributeValue(Attributes.ATTACK_DAMAGE);
 +                float f1;
 +
@@ -1405,7 +1416,7 @@
                      }
                  }
  
-@@ -1257,7 +1464,8 @@
+@@ -1257,7 +1473,8 @@
      }
  
      public void disableShield(boolean sprinting) {
@@ -1415,7 +1426,7 @@
          if (sprinting) {
              f += 0.75F;
          }
-@@ -1265,28 +1473,26 @@
+@@ -1265,28 +1482,26 @@
          if (this.random.nextFloat() < f) {
              this.getCooldowns().addCooldown(Items.SHIELD, 100);
              this.stopUsingItem();
@@ -1452,7 +1463,7 @@
  
      @Override
      public void remove(Entity.RemovalReason reason) {
-@@ -1319,15 +1525,20 @@
+@@ -1319,15 +1534,20 @@
          return this.abilities;
      }
  
@@ -1476,7 +1487,7 @@
          this.sleepCounter = 0;
          return Either.right(Unit.INSTANCE);
      }
-@@ -1335,7 +1546,7 @@
+@@ -1335,7 +1555,7 @@
      public void stopSleepInBed(boolean skipSleepTimer, boolean updateSleepingPlayers) {
          super.stopSleeping();
          if (this.level instanceof ServerLevel && updateSleepingPlayers) {
@@ -1485,7 +1496,7 @@
          }
  
          this.sleepCounter = skipSleepTimer ? 0 : 100;
-@@ -1347,12 +1558,14 @@
+@@ -1347,12 +1567,14 @@
      }
  
      public static Optional<Vec3> findRespawnPositionAndUseSpawnBlock(ServerLevel world, BlockPos pos, float angle, boolean forced, boolean alive) {
@@ -1504,7 +1515,7 @@
              }
  
              return optional;
-@@ -1361,9 +1574,10 @@
+@@ -1361,9 +1583,10 @@
          } else if (!forced) {
              return Optional.empty();
          } else {
@@ -1518,7 +1529,7 @@
          }
      }
  
-@@ -1375,8 +1589,7 @@
+@@ -1375,8 +1598,7 @@
          return this.sleepCounter;
      }
  
@@ -1528,7 +1539,7 @@
  
      public void awardStat(ResourceLocation stat) {
          this.awardStat(Stats.CUSTOM.get(stat));
-@@ -1390,18 +1603,15 @@
+@@ -1390,18 +1612,15 @@
          this.awardStat(stat, 1);
      }
  
@@ -1550,7 +1561,7 @@
  
      public int resetRecipes(Collection<Recipe<?>> recipes) {
          return 0;
-@@ -1412,42 +1622,52 @@
+@@ -1412,42 +1631,52 @@
          super.jumpFromGround();
          this.awardStat(Stats.JUMP);
          if (this.isSprinting()) {
@@ -1621,7 +1632,7 @@
      }
  
      @Override
-@@ -1466,54 +1686,56 @@
+@@ -1466,54 +1695,56 @@
  
      @Override
      public float getSpeed() {
@@ -1703,7 +1714,7 @@
                  }
              }
  
-@@ -1522,9 +1744,11 @@
+@@ -1522,9 +1753,11 @@
  
      public void checkRidingStatistics(double dx, double dy, double dz) {
          if (this.isPassenger()) {
@@ -1716,7 +1727,7 @@
                  if (entity instanceof AbstractMinecart) {
                      this.awardStat(Stats.MINECART_ONE_CM, i);
                  } else if (entity instanceof Boat) {
-@@ -1547,7 +1771,7 @@
+@@ -1547,7 +1780,7 @@
              return false;
          } else {
              if (fallDistance >= 2.0F) {
@@ -1725,7 +1736,7 @@
              }
  
              return super.causeFallDamage(fallDistance, damageMultiplier, damageSource);
-@@ -1561,8 +1785,9 @@
+@@ -1561,8 +1794,9 @@
  
      public boolean tryToStartFallFlying() {
          if (!this.onGround && !this.isFallFlying() && !this.isInWater() && !this.hasEffect(MobEffects.LEVITATION)) {
@@ -1737,7 +1748,7 @@
                  this.startFallFlying();
                  return true;
              }
-@@ -1572,12 +1797,24 @@
+@@ -1572,12 +1806,24 @@
      }
  
      public void startFallFlying() {
@@ -1763,7 +1774,7 @@
      }
  
      @Override
-@@ -1609,24 +1846,25 @@
+@@ -1609,24 +1855,25 @@
  
      public void giveExperiencePoints(int experience) {
          this.increaseScore(experience);
@@ -1797,7 +1808,7 @@
          }
  
      }
-@@ -1654,26 +1892,42 @@
+@@ -1654,26 +1901,42 @@
              this.totalExperience = 0;
          }
  
@@ -1848,7 +1859,7 @@
              }
  
          }
-@@ -1703,9 +1957,10 @@
+@@ -1703,9 +1966,10 @@
          if (this.abilities.mayBuild) {
              return true;
          } else {
@@ -1862,7 +1873,7 @@
          }
      }
  
-@@ -1713,6 +1968,7 @@
+@@ -1713,6 +1977,7 @@
      public int getExperienceReward() {
          if (!this.level.getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY) && !this.isSpectator()) {
              int i = this.experienceLevel * 7;
@@ -1870,7 +1881,7 @@
              return i > 100 ? 100 : i;
          } else {
              return 0;
-@@ -1731,11 +1987,10 @@
+@@ -1731,11 +1996,10 @@
  
      @Override
      protected Entity.MovementEmission getMovementEmission() {
@@ -1884,7 +1895,7 @@
  
      @Override
      public Component getName() {
-@@ -1748,13 +2003,7 @@
+@@ -1748,13 +2012,7 @@
  
      @Override
      public ItemStack getItemBySlot(EquipmentSlot slot) {
@@ -1899,7 +1910,7 @@
      }
  
      @Override
-@@ -1764,13 +2013,20 @@
+@@ -1764,13 +2022,20 @@
  
      @Override
      public void setItemSlot(EquipmentSlot slot, ItemStack stack) {
@@ -1927,7 +1938,7 @@
          }
  
      }
-@@ -1781,7 +2037,7 @@
+@@ -1781,7 +2046,7 @@
  
      @Override
      public Iterable<ItemStack> getHandSlots() {
@@ -1936,7 +1947,7 @@
      }
  
      @Override
-@@ -1809,27 +2065,56 @@
+@@ -1809,27 +2074,56 @@
  
      public void removeEntitiesOnShoulder() {
          if (this.timeEntitySatOnShoulder + 20L < this.level.getGameTime()) {
@@ -2003,7 +2014,7 @@
  
      @Override
      public abstract boolean isSpectator();
-@@ -1852,14 +2137,16 @@
+@@ -1852,14 +2146,16 @@
  
      @Override
      public Component getDisplayName() {
@@ -2025,7 +2036,7 @@
          });
      }
  
-@@ -1888,16 +2175,16 @@
+@@ -1888,16 +2184,16 @@
              amount = 0.0F;
          }
  
@@ -2045,7 +2056,7 @@
      }
  
      @Override
-@@ -1905,8 +2192,9 @@
+@@ -1905,8 +2201,9 @@
          if (mappedIndex >= 0 && mappedIndex < this.inventory.items.size()) {
              return SlotAccess.forContainer(this.inventory, mappedIndex);
          } else {
@@ -2057,7 +2068,7 @@
          }
      }
  
-@@ -1925,35 +2213,35 @@
+@@ -1925,35 +2222,35 @@
  
      @Override
      public HumanoidArm getMainArm() {
@@ -2101,7 +2112,7 @@
      }
  
      public void resetAttackStrengthTicker() {
-@@ -1970,7 +2258,7 @@
+@@ -1970,7 +2267,7 @@
      }
  
      public float getLuck() {
@@ -2110,7 +2121,7 @@
      }
  
      public boolean canUseGameMasterBlocks() {
-@@ -1979,13 +2267,14 @@
+@@ -1979,13 +2276,14 @@
  
      @Override
      public boolean canTakeItem(ItemStack stack) {
@@ -2128,7 +2139,7 @@
      }
  
      @Override
-@@ -1993,22 +2282,35 @@
+@@ -1993,22 +2291,35 @@
          return ImmutableList.of(Pose.STANDING, Pose.CROUCHING, Pose.SWIMMING);
      }
  
@@ -2173,7 +2184,7 @@
                      }
                  }
  
-@@ -2021,9 +2323,9 @@
+@@ -2021,9 +2332,9 @@
      public ItemStack eat(Level world, ItemStack stack) {
          this.getFoodData().eat(stack.getItem(), stack);
          this.awardStat(Stats.ITEM_USED.get(stack.getItem()));
@@ -2185,7 +2196,7 @@
          }
  
          return super.eat(world, stack);
-@@ -2036,32 +2338,38 @@
+@@ -2036,32 +2347,38 @@
  
      @Override
      public Vec3 getRopeHoldPosition(float delta) {
@@ -2242,7 +2253,7 @@
          }
      }
  
-@@ -2088,12 +2396,8 @@
+@@ -2088,12 +2405,8 @@
      }
  
      public static enum BedSleepingProblem {
@@ -2257,7 +2268,7 @@
  
          @Nullable
          private final Component message;
-@@ -2102,8 +2406,8 @@
+@@ -2102,8 +2415,8 @@
              this.message = null;
          }
  
